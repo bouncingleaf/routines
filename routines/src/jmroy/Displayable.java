@@ -6,5 +6,5 @@ package jmroy;
  *
  */
 interface Displayable {
-	abstract void display();
+    void display();
 }

@@ -9,7 +9,7 @@ class UntimedTask extends Task {
 
     // Constructors
     
-    public UntimedTask(String name) {
+    UntimedTask(String name) {
         super(name);
     }
 
@@ -21,7 +21,7 @@ class UntimedTask extends Task {
     }
     
     @Override
-    public String getTimeForDisplay() {
+    String getTimeForDisplay() {
         return "(untimed)";
     }
 
