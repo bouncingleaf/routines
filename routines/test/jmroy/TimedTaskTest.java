@@ -36,11 +36,6 @@ class TimedTaskTest {
     }
 
     @Test
-    void getName() {
-        assertEquals(NAME, testTask.getName());
-    }
-
-    @Test
     void display() {
         //Prepare to redirect output
         OutputStream os = new ByteArrayOutputStream();

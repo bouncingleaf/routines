@@ -2,7 +2,13 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="8a09022c-f21e-4fbe-9034-69f0ebad9a1a" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/src/jmroy/README.txt" beforeDir="false" afterPath="$PROJECT_DIR$/src/jmroy/README.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/test/jmroy/TaskTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/dictionaries/Leaf.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dictionaries/Leaf.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/jmroy/RoutinesApp.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/jmroy/RoutinesApp.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/jmroy/TimedTask.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/jmroy/TimedTask.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/test/jmroy/TimedTaskTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/test/jmroy/TimedTaskTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/test/jmroy/UntimedTaskTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/test/jmroy/UntimedTaskTest.java" afterDir="false" />
     </list>
     <ignored path="$PROJECT_DIR$/out/" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -15,16 +21,23 @@
     <option name="myElementSize" value="186" />
   </component>
   <component name="DefaultGradleProjectSettings">
-    <option name="testRunner" value="GRADLE" />
-    <option name="delegatedBuild" value="true" />
+    <option name="isMigrated" value="true" />
   </component>
   <component name="FileEditorManager">
-    <leaf>
+    <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/test/jmroy/TimedTaskTest.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="221">
-              <caret line="27" column="7" lean-forward="true" selection-start-line="27" selection-start-column="7" selection-end-line="27" selection-end-column="7" />
+            <state relative-caret-position="624">
+              <caret line="47" column="31" lean-forward="true" selection-start-line="47" selection-start-column="31" selection-end-line="47" selection-end-column="31" />
+              <folding>
+                <element signature="e#397#398#0" expanded="true" />
+                <element signature="e#452#453#0" expanded="true" />
+                <element signature="e#487#488#0" expanded="true" />
+                <element signature="e#547#548#0" expanded="true" />
+                <element signature="e#730#731#0" expanded="true" />
+                <element signature="e#806#807#0" expanded="true" />
+              </folding>
             </state>
           </provider>
         </entry>
@@ -32,20 +45,8 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/test/jmroy/UntimedTaskTest.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="34">
-              <caret line="9" column="49" lean-forward="true" selection-start-line="9" selection-start-column="49" selection-end-line="9" selection-end-column="49" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/test/jmroy/UserTest.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="323">
-              <caret line="19" column="5" lean-forward="true" selection-start-line="19" selection-start-column="5" selection-end-line="19" selection-end-column="5" />
-              <folding>
-                <element signature="imports" expanded="true" />
-              </folding>
+            <state relative-caret-position="238">
+              <caret line="25" selection-start-line="25" selection-end-line="25" />
             </state>
           </provider>
         </entry>
@@ -54,7 +55,15 @@
         <entry file="file://$PROJECT_DIR$/test/jmroy/RoutineTest.java">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="17">
-              <caret line="2" lean-forward="true" selection-start-line="2" selection-end-line="2" />
+              <caret line="26" column="42" lean-forward="true" selection-start-line="26" selection-start-column="42" selection-end-line="26" selection-end-column="42" />
+              <folding>
+                <element signature="e#332#333#0" expanded="true" />
+                <element signature="e#390#391#0" expanded="true" />
+                <element signature="e#423#424#0" expanded="true" />
+                <element signature="e#492#493#0" expanded="true" />
+                <element signature="e#676#677#0" expanded="true" />
+                <element signature="e#736#737#0" expanded="true" />
+              </folding>
             </state>
           </provider>
         </entry>
@@ -62,25 +71,25 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/jmroy/UntimedTask.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="153">
-              <caret line="9" column="19" lean-forward="true" selection-start-line="9" selection-start-column="19" selection-end-line="9" selection-end-column="19" />
+            <state relative-caret-position="459">
+              <caret line="27" column="1" lean-forward="true" selection-start-line="27" selection-start-column="1" selection-end-line="27" selection-end-column="1" />
               <folding>
-                <element signature="e#149#150#0" expanded="true" />
-                <element signature="e#176#177#0" expanded="true" />
-                <element signature="e#239#240#0" expanded="true" />
-                <element signature="e#326#327#0" expanded="true" />
-                <element signature="e#385#386#0" expanded="true" />
-                <element signature="e#419#420#0" expanded="true" />
+                <element signature="e#142#143#0" expanded="true" />
+                <element signature="e#169#170#0" expanded="true" />
+                <element signature="e#232#233#0" expanded="true" />
+                <element signature="e#319#320#0" expanded="true" />
+                <element signature="e#371#372#0" expanded="true" />
+                <element signature="e#405#406#0" expanded="true" />
               </folding>
             </state>
           </provider>
         </entry>
       </file>
       <file pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/src/jmroy/README.txt">
+        <entry file="file://$PROJECT_DIR$/src/jmroy/User.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="459">
-              <caret line="27" selection-start-line="27" selection-end-line="27" />
+            <state relative-caret-position="216">
+              <caret line="14" column="24" lean-forward="true" selection-start-line="14" selection-start-column="24" selection-end-line="14" selection-end-column="24" />
             </state>
           </provider>
         </entry>
@@ -88,8 +97,16 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/jmroy/Routine.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="437">
-              <caret line="61" selection-start-line="61" selection-end-line="61" />
+            <state relative-caret-position="344">
+              <caret line="63" selection-start-line="63" selection-end-line="63" />
+              <folding>
+                <element signature="e#540#541#0" expanded="true" />
+                <element signature="e#574#575#0" expanded="true" />
+                <element signature="e#601#602#0" expanded="true" />
+                <element signature="e#641#642#0" expanded="true" />
+                <element signature="e#676#677#0" expanded="true" />
+                <element signature="e#712#713#0" expanded="true" />
+              </folding>
             </state>
           </provider>
         </entry>
@@ -97,8 +114,8 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/jmroy/RoutinesApp.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="17">
-              <caret line="113" column="9" lean-forward="true" selection-start-line="113" selection-start-column="9" selection-end-line="113" selection-end-column="9" />
+            <state relative-caret-position="442">
+              <caret line="27" column="6" lean-forward="true" selection-start-line="27" selection-start-column="6" selection-end-line="27" selection-end-column="6" />
             </state>
           </provider>
         </entry>
@@ -106,15 +123,27 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/jmroy/Task.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="527">
-              <caret line="31" column="1" selection-start-line="7" selection-end-line="31" selection-end-column="1" />
+            <state relative-caret-position="238">
+              <caret line="14" lean-forward="true" selection-start-line="14" selection-end-line="14" />
               <folding>
-                <element signature="e#208#209#0" expanded="true" />
-                <element signature="e#240#241#0" expanded="true" />
-                <element signature="e#284#285#0" expanded="true" />
-                <element signature="e#311#312#0" expanded="true" />
-                <element signature="e#344#345#0" expanded="true" />
-                <element signature="e#376#377#0" expanded="true" />
+                <element signature="e#196#197#0" expanded="true" />
+                <element signature="e#228#229#0" expanded="true" />
+                <element signature="e#268#269#0" expanded="true" />
+                <element signature="e#295#296#0" expanded="true" />
+                <element signature="e#328#329#0" expanded="true" />
+                <element signature="e#360#361#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/test/jmroy/TaskTest.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="366">
+              <caret line="34" column="52" lean-forward="true" selection-start-line="34" selection-start-column="52" selection-end-line="34" selection-end-column="52" />
+              <folding>
+                <element signature="imports" expanded="true" />
               </folding>
             </state>
           </provider>
@@ -123,8 +152,18 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/jmroy/TimedTask.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="544">
-              <caret line="40" column="1" selection-start-line="7" selection-end-line="40" selection-end-column="1" />
+            <state relative-caret-position="114">
+              <caret line="13" column="19" lean-forward="true" selection-start-line="13" selection-start-column="19" selection-end-line="13" selection-end-column="19" />
+              <folding>
+                <element signature="e#298#299#0" expanded="true" />
+                <element signature="e#328#329#0" expanded="true" />
+                <element signature="e#364#365#0" expanded="true" />
+                <element signature="e#402#403#0" expanded="true" />
+                <element signature="e#469#470#0" expanded="true" />
+                <element signature="e#548#549#0" expanded="true" />
+                <element signature="e#596#597#0" expanded="true" />
+                <element signature="e#640#641#0" expanded="true" />
+              </folding>
             </state>
           </provider>
         </entry>
@@ -142,6 +181,8 @@
     <findStrings>
       <find>\t</find>
       <find>(Untime</find>
+      <find>input</find>
+      <find>NAME</find>
     </findStrings>
     <replaceStrings>
       <replace />
@@ -155,23 +196,24 @@
       <list>
         <option value="$PROJECT_DIR$/test/jmroy/UserTest.java" />
         <option value="$PROJECT_DIR$/test/jmroy/RoutineTest.java" />
-        <option value="$PROJECT_DIR$/test/jmroy/TimedTaskTest.java" />
-        <option value="$PROJECT_DIR$/test/jmroy/UntimedTaskTest.java" />
         <option value="$PROJECT_DIR$/src/jmroy/Displayable.java" />
         <option value="$PROJECT_DIR$/src/jmroy/UntimedTask.java" />
-        <option value="$PROJECT_DIR$/src/jmroy/TimedTask.java" />
         <option value="$PROJECT_DIR$/src/jmroy/User.java" />
-        <option value="$PROJECT_DIR$/src/jmroy/RoutinesApp.java" />
         <option value="$PROJECT_DIR$/src/jmroy/Routine.java" />
         <option value="$PROJECT_DIR$/src/jmroy/Task.java" />
         <option value="$PROJECT_DIR$/src/jmroy/README.txt" />
+        <option value="$PROJECT_DIR$/src/jmroy/TimedTask.java" />
+        <option value="$PROJECT_DIR$/src/jmroy/RoutinesApp.java" />
+        <option value="$PROJECT_DIR$/test/jmroy/TimedTaskTest.java" />
+        <option value="$PROJECT_DIR$/test/jmroy/UntimedTaskTest.java" />
+        <option value="$PROJECT_DIR$/test/jmroy/TaskTest.java" />
       </list>
     </option>
   </component>
   <component name="ProjectFrameBounds" extendedState="6">
-    <option name="x" value="952" />
-    <option name="width" value="977" />
-    <option name="height" value="1038" />
+    <option name="x" value="951" />
+    <option name="width" value="978" />
+    <option name="height" value="1039" />
   </component>
   <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
   <component name="ProjectView">
@@ -179,7 +221,6 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
-      <pane id="PackagesPane" />
       <pane id="ProjectPane">
         <subPane>
           <expand>
@@ -214,6 +255,7 @@
         </subPane>
       </pane>
       <pane id="Scope" />
+      <pane id="PackagesPane" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -248,7 +290,7 @@
       </list>
     </option>
   </component>
-  <component name="RunManager" selected="Application.RoutinesApp">
+  <component name="RunManager" selected="JUnit.jmroy in routines">
     <configuration name="RoutinesApp" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
       <option name="MAIN_CLASS_NAME" value="jmroy.RoutinesApp" />
       <module name="routines" />
@@ -262,7 +304,7 @@
         <option name="Make" enabled="true" />
       </method>
     </configuration>
-    <configuration name="RoutineTest" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+    <configuration name="TaskTest" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
       <module name="routines" />
       <extension name="coverage">
         <pattern>
@@ -271,7 +313,7 @@
         </pattern>
       </extension>
       <option name="PACKAGE_NAME" value="jmroy" />
-      <option name="MAIN_CLASS_NAME" value="jmroy.RoutineTest" />
+      <option name="MAIN_CLASS_NAME" value="jmroy.TaskTest" />
       <option name="TEST_OBJECT" value="class" />
       <method v="2">
         <option name="Make" enabled="true" />
@@ -323,11 +365,11 @@
     </configuration>
     <recent_temporary>
       <list>
-        <item itemvalue="Application.RoutinesApp" />
         <item itemvalue="JUnit.jmroy in routines" />
+        <item itemvalue="JUnit.TaskTest" />
+        <item itemvalue="Application.RoutinesApp" />
         <item itemvalue="JUnit.UntimedTaskTest" />
         <item itemvalue="JUnit.TimedTaskTest" />
-        <item itemvalue="JUnit.RoutineTest" />
       </list>
     </recent_temporary>
   </component>
@@ -342,12 +384,6 @@
     <servers />
   </component>
   <component name="TestHistory">
-    <history-entry file="jmroy_in_routines - 2019.05.19 at 18h 36m 31s.xml">
-      <configuration name="jmroy in routines" configurationId="JUnit" />
-    </history-entry>
-    <history-entry file="jmroy_in_routines - 2019.05.19 at 18h 36m 47s.xml">
-      <configuration name="jmroy in routines" configurationId="JUnit" />
-    </history-entry>
     <history-entry file="RoutineTest - 2019.05.19 at 18h 52m 49s.xml">
       <configuration name="RoutineTest" configurationId="JUnit" />
     </history-entry>
@@ -372,17 +408,22 @@
     <history-entry file="jmroy_in_routines - 2019.05.19 at 19h 34m 19s.xml">
       <configuration name="jmroy in routines" configurationId="JUnit" />
     </history-entry>
+    <history-entry file="TaskTest - 2019.05.21 at 20h 18m 05s.xml">
+      <configuration name="TaskTest" configurationId="JUnit" />
+    </history-entry>
+    <history-entry file="jmroy_in_routines - 2019.05.21 at 20h 18m 16s.xml">
+      <configuration name="jmroy in routines" configurationId="JUnit" />
+    </history-entry>
   </component>
   <component name="ToolWindowManager">
     <frame x="-7" y="-7" width="1550" height="838" extended-state="6" />
-    <editor active="true" />
     <layout>
       <window_info id="Image Layers" order="0" />
       <window_info id="Designer" order="1" />
       <window_info id="UI Designer" order="2" />
       <window_info id="Learn" order="3" weight="0.3295302" />
       <window_info id="Capture Tool" order="4" />
-      <window_info active="true" content_ui="combo" id="Project" order="5" visible="true" weight="0.2543624" />
+      <window_info active="true" content_ui="combo" id="Project" order="5" visible="true" weight="0.25771812" />
       <window_info id="Structure" order="6" side_tool="true" weight="0.25" />
       <window_info id="Favorites" order="7" side_tool="true" />
       <window_info anchor="bottom" id="Terminal" order="0" />
@@ -391,7 +432,7 @@
       <window_info anchor="bottom" id="Message" order="3" />
       <window_info anchor="bottom" id="Version Control" order="4" />
       <window_info anchor="bottom" id="Find" order="5" weight="0.3286119" />
-      <window_info anchor="bottom" id="Run" order="6" visible="true" weight="0.18838526" />
+      <window_info anchor="bottom" id="Run" order="6" weight="0.34135976" />
       <window_info anchor="bottom" id="Debug" order="7" weight="0.4" />
       <window_info anchor="bottom" id="Cvs" order="8" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="9" weight="0.4" />
@@ -406,6 +447,36 @@
       <window_info anchor="right" id="Ant Build" order="7" weight="0.25" />
       <window_info anchor="right" content_ui="combo" id="Hierarchy" order="8" weight="0.25" />
     </layout>
+    <layout-to-restore>
+      <window_info id="Image Layers" order="0" />
+      <window_info id="Designer" order="1" />
+      <window_info id="UI Designer" order="2" />
+      <window_info id="Learn" order="3" weight="0.3295302" />
+      <window_info id="Capture Tool" order="4" />
+      <window_info active="true" content_ui="combo" id="Project" order="5" visible="true" weight="0.25771812" />
+      <window_info id="Structure" order="6" side_tool="true" weight="0.25" />
+      <window_info id="Favorites" order="7" side_tool="true" />
+      <window_info anchor="bottom" id="Terminal" order="0" />
+      <window_info anchor="bottom" id="Event Log" order="1" side_tool="true" />
+      <window_info anchor="bottom" id="Messages" order="2" />
+      <window_info anchor="bottom" id="Message" order="3" />
+      <window_info anchor="bottom" id="Version Control" order="4" />
+      <window_info anchor="bottom" id="Find" order="5" weight="0.3286119" />
+      <window_info anchor="bottom" id="Run" order="6" weight="0.18838526" />
+      <window_info anchor="bottom" id="Debug" order="7" weight="0.4" />
+      <window_info anchor="bottom" id="Cvs" order="8" weight="0.25" />
+      <window_info anchor="bottom" id="Inspection" order="9" weight="0.4" />
+      <window_info anchor="bottom" id="TODO" order="10" />
+      <window_info anchor="right" id="Theme Preview" order="0" />
+      <window_info anchor="right" id="Capture Analysis" order="1" />
+      <window_info anchor="right" id="Palette&#9;" order="2" />
+      <window_info anchor="right" id="Maven" order="3" />
+      <window_info anchor="right" id="Coverage" order="4" side_tool="true" visible="true" weight="0.29597315" />
+      <window_info anchor="right" id="Palette" order="5" />
+      <window_info anchor="right" id="Commander" internal_type="SLIDING" order="6" type="SLIDING" weight="0.4" />
+      <window_info anchor="right" id="Ant Build" order="7" weight="0.25" />
+      <window_info anchor="right" content_ui="combo" id="Hierarchy" order="8" weight="0.25" />
+    </layout-to-restore>
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/routines$jmroy_in_routines.ic" NAME="jmroy in routines Coverage Results" MODIFIED="1558308854659" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="idea" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false">
@@ -414,25 +485,11 @@
     <SUITE FILE_PATH="coverage/routines$UserTest.ic" NAME="UserTest Coverage Results" MODIFIED="1558303447440" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="idea" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false">
       <FILTER>jmroy.*</FILTER>
     </SUITE>
+    <SUITE FILE_PATH="coverage/routines$TaskTest.ic" NAME="TaskTest Coverage Results" MODIFIED="1558484274017" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="idea" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false">
+      <FILTER>jmroy.*</FILTER>
+    </SUITE>
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/src/jmroy/User.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="284">
-          <caret line="20" column="5" lean-forward="true" selection-start-line="20" selection-start-column="5" selection-end-line="20" selection-end-column="5" />
-          <folding>
-            <element signature="e#244#245#0" expanded="true" />
-            <element signature="e#302#303#0" expanded="true" />
-            <element signature="e#452#453#0" expanded="true" />
-            <element signature="e#485#486#0" expanded="true" />
-            <element signature="e#536#537#0" expanded="true" />
-            <element signature="e#580#581#0" expanded="true" />
-            <element signature="e#518#519#0" expanded="true" />
-            <element signature="e#545#546#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/jmroy/Displayable.java">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="153">
@@ -440,53 +497,43 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/test/jmroy/UserTest.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="255">
+          <caret line="19" column="5" selection-start-line="19" selection-start-column="5" selection-end-line="19" selection-end-column="5" />
+          <folding>
+            <element signature="imports" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/jmroy/README.txt">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="459">
+          <caret line="27" lean-forward="true" selection-start-line="27" selection-end-line="27" />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/src/jmroy/RoutinesApp.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="17">
-          <caret line="113" column="9" lean-forward="true" selection-start-line="113" selection-start-column="9" selection-end-line="113" selection-end-column="9" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/jmroy/Routine.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="437">
-          <caret line="61" selection-start-line="61" selection-end-line="61" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/jmroy/Task.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="527">
-          <caret line="31" column="1" selection-start-line="7" selection-end-line="31" selection-end-column="1" />
-          <folding>
-            <element signature="e#208#209#0" expanded="true" />
-            <element signature="e#240#241#0" expanded="true" />
-            <element signature="e#284#285#0" expanded="true" />
-            <element signature="e#311#312#0" expanded="true" />
-            <element signature="e#344#345#0" expanded="true" />
-            <element signature="e#376#377#0" expanded="true" />
-          </folding>
+        <state relative-caret-position="442">
+          <caret line="27" column="6" lean-forward="true" selection-start-line="27" selection-start-column="6" selection-end-line="27" selection-end-column="6" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/jmroy/TimedTask.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="544">
-          <caret line="40" column="1" selection-start-line="7" selection-end-line="40" selection-end-column="1" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/jmroy/UntimedTask.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="153">
-          <caret line="9" column="19" lean-forward="true" selection-start-line="9" selection-start-column="19" selection-end-line="9" selection-end-column="19" />
+        <state relative-caret-position="114">
+          <caret line="13" column="19" lean-forward="true" selection-start-line="13" selection-start-column="19" selection-end-line="13" selection-end-column="19" />
           <folding>
-            <element signature="e#149#150#0" expanded="true" />
-            <element signature="e#176#177#0" expanded="true" />
-            <element signature="e#239#240#0" expanded="true" />
-            <element signature="e#326#327#0" expanded="true" />
-            <element signature="e#385#386#0" expanded="true" />
-            <element signature="e#419#420#0" expanded="true" />
+            <element signature="e#298#299#0" expanded="true" />
+            <element signature="e#328#329#0" expanded="true" />
+            <element signature="e#364#365#0" expanded="true" />
+            <element signature="e#402#403#0" expanded="true" />
+            <element signature="e#469#470#0" expanded="true" />
+            <element signature="e#548#549#0" expanded="true" />
+            <element signature="e#596#597#0" expanded="true" />
+            <element signature="e#640#641#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -494,38 +541,99 @@
     <entry file="file://$PROJECT_DIR$/test/jmroy/RoutineTest.java">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="17">
-          <caret line="2" lean-forward="true" selection-start-line="2" selection-end-line="2" />
+          <caret line="26" column="42" lean-forward="true" selection-start-line="26" selection-start-column="42" selection-end-line="26" selection-end-column="42" />
+          <folding>
+            <element signature="e#332#333#0" expanded="true" />
+            <element signature="e#390#391#0" expanded="true" />
+            <element signature="e#423#424#0" expanded="true" />
+            <element signature="e#492#493#0" expanded="true" />
+            <element signature="e#676#677#0" expanded="true" />
+            <element signature="e#736#737#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/jmroy/Task.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="238">
+          <caret line="14" lean-forward="true" selection-start-line="14" selection-end-line="14" />
+          <folding>
+            <element signature="e#196#197#0" expanded="true" />
+            <element signature="e#228#229#0" expanded="true" />
+            <element signature="e#268#269#0" expanded="true" />
+            <element signature="e#295#296#0" expanded="true" />
+            <element signature="e#328#329#0" expanded="true" />
+            <element signature="e#360#361#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/test/jmroy/UntimedTaskTest.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="34">
-          <caret line="9" column="49" lean-forward="true" selection-start-line="9" selection-start-column="49" selection-end-line="9" selection-end-column="49" />
+        <state relative-caret-position="238">
+          <caret line="25" selection-start-line="25" selection-end-line="25" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/test/jmroy/UserTest.java">
+    <entry file="file://$PROJECT_DIR$/test/jmroy/TimedTaskTest.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="323">
-          <caret line="19" column="5" lean-forward="true" selection-start-line="19" selection-start-column="5" selection-end-line="19" selection-end-column="5" />
+        <state relative-caret-position="624">
+          <caret line="47" column="31" lean-forward="true" selection-start-line="47" selection-start-column="31" selection-end-line="47" selection-end-column="31" />
+          <folding>
+            <element signature="e#397#398#0" expanded="true" />
+            <element signature="e#452#453#0" expanded="true" />
+            <element signature="e#487#488#0" expanded="true" />
+            <element signature="e#547#548#0" expanded="true" />
+            <element signature="e#730#731#0" expanded="true" />
+            <element signature="e#806#807#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/test/jmroy/TaskTest.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="366">
+          <caret line="34" column="52" lean-forward="true" selection-start-line="34" selection-start-column="52" selection-end-line="34" selection-end-column="52" />
           <folding>
             <element signature="imports" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/test/jmroy/TimedTaskTest.java">
+    <entry file="file://$PROJECT_DIR$/src/jmroy/Routine.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="221">
-          <caret line="27" column="7" lean-forward="true" selection-start-line="27" selection-start-column="7" selection-end-line="27" selection-end-column="7" />
+        <state relative-caret-position="344">
+          <caret line="63" selection-start-line="63" selection-end-line="63" />
+          <folding>
+            <element signature="e#540#541#0" expanded="true" />
+            <element signature="e#574#575#0" expanded="true" />
+            <element signature="e#601#602#0" expanded="true" />
+            <element signature="e#641#642#0" expanded="true" />
+            <element signature="e#676#677#0" expanded="true" />
+            <element signature="e#712#713#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/jmroy/README.txt">
+    <entry file="file://$PROJECT_DIR$/src/jmroy/UntimedTask.java">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="459">
-          <caret line="27" selection-start-line="27" selection-end-line="27" />
+          <caret line="27" column="1" lean-forward="true" selection-start-line="27" selection-start-column="1" selection-end-line="27" selection-end-column="1" />
+          <folding>
+            <element signature="e#142#143#0" expanded="true" />
+            <element signature="e#169#170#0" expanded="true" />
+            <element signature="e#232#233#0" expanded="true" />
+            <element signature="e#319#320#0" expanded="true" />
+            <element signature="e#371#372#0" expanded="true" />
+            <element signature="e#405#406#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/jmroy/User.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="216">
+          <caret line="14" column="24" lean-forward="true" selection-start-line="14" selection-start-column="24" selection-end-line="14" selection-end-column="24" />
         </state>
       </provider>
     </entry>

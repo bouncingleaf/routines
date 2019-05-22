@@ -10,6 +10,9 @@ public class RoutinesApp {
     /**
      * Prompts the user for the name of a new routine, adds one or more tasks to the 
      * new routine, adds the routine to the list of routines
+     *
+     * Precondition: input is open to a Scanner
+     * Postcondition: A new Routine is created for the current User
      */
     private static void addNewRoutine() {
         System.out.println("Enter the name of the routine (e.g. 'My morning routine'): ");
@@ -22,6 +25,9 @@ public class RoutinesApp {
     /**
      * Prompts the user for the name and length of one or more tasks, adds the tasks to the
      * specified Routine
+     *
+     * Precondition: input is open to a Scanner
+     * Precondition: Zero or more Tasks are added to the provided Routine
      * @param routine The routine to which the user wants to add tasks
      */
     private static void addTasksToRoutine(Routine routine) {
@@ -50,6 +56,9 @@ public class RoutinesApp {
 
     /**
      * Lists all the routines for the specified user and all the tasks on each routine
+     * Precondition: A current user must be defined.
+     * Postcondition: If the user has routines, they are listed along with their tasks.
+     *   If the user has no routines, a message is displayed.
      */
     private static void listRoutines() {
         // Get the routines
@@ -58,7 +67,7 @@ public class RoutinesApp {
         if (routines.size() == 0) {
             System.out.println("No routines found.\n");
         }
-        // Otherwise, list the routines and prompt the user to choose a routine
+        // Otherwise, list the routines and their tasks
         else {
             System.out.println("Your routines:");
             for (Routine routine : user.getMyRoutines()) {
@@ -68,7 +77,10 @@ public class RoutinesApp {
     }
     
     /**
-     * Displays a list of routines for the user and prompts for a selection
+     * Displays a list of routines for the user and prompts for a selection.
+     *
+     * Precondition: A current user must be defined.
+     * Precondition: input is open to a Scanner
      * @return a Routine if one is selected, null otherwise
      */
     private static Routine selectRoutine() {
@@ -102,7 +114,9 @@ public class RoutinesApp {
 
     /**
      * Prompts for a user's name, gets the input, sets a default if no name entered,
-     * establishes the User object, and greets the user
+     * establishes the User object, and greets the user.
+     *
+     * Precondition: input is open to a Scanner
      * @return the selected user
      */
     private static User getUser() {
@@ -117,6 +131,13 @@ public class RoutinesApp {
         return newUser;
     }
 
+    /**
+     * The main menu loop for the program. Displays the menu, gets the user's choice,
+     * and handles the user's choice accordingly. Loop continues until the user
+     * chooses to exit.
+     *
+     * Precondition: input is open to a Scanner
+     */
     private static void mainMenuLoop() {
 		// The main menu
 		final String MENU =
@@ -166,6 +187,7 @@ public class RoutinesApp {
     /**
      * The main method of the program. Loops on displaying a menu and accepting and handling
      * a menu choice from the user, until the user chooses to quit the application.
+     *
      * @param args command line arguments, not expecting any
      */
     public static void main(String[] args) {

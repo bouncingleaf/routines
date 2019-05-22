@@ -24,18 +24,6 @@ class UntimedTaskTest {
     }
 
     @Test
-    void getName() {
-        assertEquals(NAME, testTask.getName());
-    }
-
-    @Test
-    void setName() {
-        String NEW_NAME = NAME.concat(" new");
-        testTask.setName(NEW_NAME);
-        assertEquals(NEW_NAME, testTask.getName());
-    }
-
-    @Test
     void display() {
         //Prepare to redirect output
         OutputStream os = new ByteArrayOutputStream();

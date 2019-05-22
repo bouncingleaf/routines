@@ -28,9 +28,12 @@ class TimedTask extends Task {
         this.minutes = minutes;
     }
 
+    /**
+     * Prints the name of the task and the number of minutes followed by "min"
+     */
     @Override
     public void display() {
-        System.out.printf("%s\t%d min\n", this.getName(), this.minutes);
+        System.out.printf("%s\t%s\n", this.getName(), this.getTimeForDisplay());
     }
 
     @Override
