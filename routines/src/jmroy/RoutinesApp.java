@@ -1,11 +1,17 @@
 package jmroy;
 
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Scanner;
 
 public class RoutinesApp {
     private static Scanner input;
     private static User user;
+    private static final String FILE_DIR = System.getProperty("user.dir")
+            + System.getProperty("file.separator")
+            + "files"
+            + System.getProperty("file.separator");
+    private static final String USERS_FILE = FILE_DIR + "ALL_USERS.txt";
 
     /**
      * Prompts the user for the name of a new routine, adds one or more tasks to the 
@@ -20,6 +26,7 @@ public class RoutinesApp {
         Routine newRoutine = new Routine(routineName);
         addTasksToRoutine(newRoutine);
         user.addRoutine(newRoutine);
+        user.save(FILE_DIR);
     }
 
     /**
@@ -33,7 +40,7 @@ public class RoutinesApp {
     private static void addTasksToRoutine(Routine routine) {
         String taskName = "ok";
         int taskLength;
-        // Add tasks until the user stops
+        // Add tasks until the user stops adding
         while (!taskName.equals("")) {
             System.out.printf("\nName of task # %d (or enter, if done): \n", routine.numberOfTasks() + 1);
             taskName = input.nextLine();
@@ -113,21 +120,60 @@ public class RoutinesApp {
     }
 
     /**
-     * Prompts for a user's name, gets the input, sets a default if no name entered,
+     * Prompts for a user's name, gets the input, looks up the user in the
+     * users file. If found, loads the user's data. If not found, starts a
+     * new user. Either way (unless there's an error or no username entered),
      * establishes the User object, and greets the user.
      *
      * Precondition: input is open to a Scanner
      * @return the selected user
      */
-    private static User getUser() {
-        System.out.println("Enter your name: ");
-        String userName = input.nextLine();
-        // If the user didn't enter anything, we'll just call them "friend"
-        if (userName.equals("")) {
-            userName = "friend";
+    private static User getUser(Scanner userReader, PrintWriter userWriter) {
+        final int MAX_USERNAME_LENGTH = 30;
+        User newUser;
+        // Get the username and clean it up a bit
+        // User has 3 tries to enter a username
+        String userName = "";
+        int tries = 0;
+        while (userName.length() < 1 && tries++ < 3) {
+            System.out.println("Enter your username: ");
+            // Force lowercase, only alphanumeric, less than MAX_USERNAME_LENGTH characters
+            userName = input.nextLine()
+                    .toLowerCase()
+                    .replaceAll("[^a-z0-9]","");
+            userName = userName.length() < MAX_USERNAME_LENGTH ? userName : userName.substring(0, MAX_USERNAME_LENGTH);
         }
-        User newUser = new User(userName);
-        System.out.printf("Hello, %s\n\n", newUser.getName());
+
+        // If they still haven't entered anything valid, exit
+        if (userName.length() < 1) {
+            return null;
+        }
+        // Look for the username in the users file
+        boolean found = false;
+        if (userReader != null) {
+            while (userReader.hasNextLine() && !found) {
+                found = userReader.nextLine().equals(userName);
+            }
+        }
+
+        if (found) {
+            newUser = User.load(FILE_DIR, userName);
+        } else {
+            System.out.println("Greetings new user. Enter your name (optional): ");
+            // Not the best sanitizing but it'll do
+            String name = input.nextLine().replaceAll("[^a-zA-Z0-9\']"," ");
+            newUser = new User(userName, name);
+
+            // Save username to the users file
+            userWriter.println(newUser.getUserName());
+
+            // Initial save of user data
+            newUser.save(FILE_DIR);
+        }
+
+        if (newUser != null) {
+            System.out.printf("Hello, %s\n\n", newUser.getName());
+        }
         return newUser;
     }
 
@@ -196,16 +242,31 @@ public class RoutinesApp {
 
         // Display an application title
         System.out.println("Routines!\n");
-        
+
         // Get the user whose routines we want to work with
-        user = getUser(); 
+        File usersFile = new File(USERS_FILE);
+        // Establish readers and writers to the users file, and go get the user
+        try (
+                Scanner userReader = usersFile.exists() ? new Scanner(usersFile) : null;
+                PrintWriter userWriter = new PrintWriter(new FileOutputStream(usersFile, true))
+            ) {
+            user = getUser(userReader, userWriter);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+            user = null;
+        }
 
-        // Display the menu, get the user's choice, handle it
-        mainMenuLoop();
+        if (user == null) {
+            // Something went wrong
+            System.out.println("Goodbye.");
+        } else {
+            // Display the menu, get the user's choice, handle it
+            mainMenuLoop();
 
-        // The user has opted to quit. Close the input and say goodbye.
+            // The user has opted to quit. Close the input and say goodbye.
+            System.out.printf("Done. See you next time, %s!\n\n", user.getName());
+        }
         input.close();
-        System.out.printf("Done. See you next time, %s!\n\n", user.getName());
     }
 
 }

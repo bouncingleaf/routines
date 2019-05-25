@@ -1,5 +1,6 @@
 package jmroy;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 
 /**
@@ -7,7 +8,7 @@ import java.util.ArrayList;
  * @author Jessica Roy
  *
  */
-class Routine implements Displayable {
+class Routine implements Displayable, Serializable {
     
     // Instance variables
     
