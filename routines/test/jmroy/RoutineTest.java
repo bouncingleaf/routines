@@ -11,45 +11,49 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class RoutineTest {
     private Routine testRoutine;
+    private final String TITLE = "Routine Title";
+    private final String TIMED = "Timed Task";
+    private final String UNTIMED = "Untimed Task";
 
     @BeforeEach
     void beforeEach() {
-        testRoutine = new Routine("Routine Title");
+        testRoutine = new Routine(TITLE);
+    }
+
+    private void addTwo() {
+        testRoutine.addTask(new TimedTask(TIMED, 3));
+        testRoutine.addTask(new UntimedTask(UNTIMED));
     }
 
     @Test
     void getTitle() {
-        assertEquals("Routine Title", testRoutine.getTitle());
+        assertEquals(TITLE, testRoutine.getTitle());
     }
 
     @Test
     void setTitle() {
-        testRoutine.setTitle("New title");
-        assertEquals("New title", testRoutine.getTitle());
+        testRoutine.setTitle(TITLE + " NEW");
+        assertEquals(TITLE + " NEW", testRoutine.getTitle());
     }
 
+    /**
+     * Tests for numberOfTasks and addTask
+     */
     @Test
-    void numberOfTasksEmpty() {
+    void numberOfTasks() {
+        // Empty
         assertEquals(0, testRoutine.numberOfTasks());
-    }
-
-    @Test
-    // Also tests addTask
-    void numberOfTasksNonEmpty() {
-        Task testTask = new TimedTask("hey", 3);
-        Task testTaskTwo = new UntimedTask("foo");
-        testRoutine.addTask(testTask);
-        testRoutine.addTask(testTaskTwo);
+        // Non-empty
+        addTwo();
         assertEquals( 2, testRoutine.numberOfTasks());
     }
 
+    /**
+     * Tests the display of the routine title and the tasks
+     */
     @Test
     void display() {
-        Task testTask = new TimedTask("hey", 3);
-        Task testTaskTwo = new UntimedTask("foo");
-        testRoutine.addTask(testTask);
-        testRoutine.addTask(testTaskTwo);
-
+        addTwo();
         //Prepare to redirect output
         OutputStream os = new ByteArrayOutputStream();
         PrintStream ps = new PrintStream(os);
@@ -57,9 +61,9 @@ class RoutineTest {
 
         testRoutine.display();
         assertEquals(
-                "\tRoutine: Routine Title\n" +
-                        "\t\t1\they\t3 min\n" +
-                        "\t\t2\tfoo\t(untimed)\n",
+                "\tRoutine: " + TITLE + "\n" +
+                        "\t\t1\t" + TIMED + "\t3 min\n" +
+                        "\t\t2\t" + UNTIMED + "\t(untimed)\n",
                 os.toString());
 
         //Restore normal output

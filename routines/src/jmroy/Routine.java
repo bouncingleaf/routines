@@ -2,6 +2,7 @@ package jmroy;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Timer;
 
 /**
  * 
@@ -9,7 +10,10 @@ import java.util.ArrayList;
  *
  */
 class Routine implements Displayable, Serializable {
-    
+
+    // Class variables
+    private static final Timer timer = new Timer();
+
     // Instance variables
     
     private String title = "My Routine";
@@ -17,7 +21,7 @@ class Routine implements Displayable, Serializable {
     
     // Constructors
     
-    Routine() {
+    private Routine() {
         this.tasks = new ArrayList<>();
     }
 
@@ -44,13 +48,16 @@ class Routine implements Displayable, Serializable {
     void addTask(Task task) {
         this.tasks.add(task);
     }
-    
+
+    /**
+     * Displays a routine and lists out the current tasks and their times, in order.
+     */
     public void display() {
         System.out.printf("\tRoutine: %s\n", this.getTitle());
         Task currentTask;
         // Print out the list of tasks and their times
         for (int i = 0; i < tasks.size(); i++) {
-            currentTask = tasks.get(i);
+            currentTask = getTask(i);
             System.out.printf(
                 "\t\t%d\t%s\t%s\n",
                 i + 1,
@@ -60,10 +67,22 @@ class Routine implements Displayable, Serializable {
         }
     }
 
+    private Task getTask(int i) {
+        return tasks.get(i);
+    }
+
     void run() {
         // Dummy for now
         System.out.printf("Simulation of running %s routine...\n", this.getTitle());
-        display();
+        Task currentTask;
+        for (int i = 0; i < numberOfTasks(); i++) {
+            currentTask = getTask(i);
+            currentTask.display();
+            if (currentTask instanceof TimedTask) {
+                ((TimedTask) currentTask).countdown(timer);
+            }
+        }
+        timer.cancel();
         System.out.println("Real functionality coming soon");
     }
 }
