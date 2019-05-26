@@ -29,6 +29,11 @@ abstract class Task implements Displayable, Serializable {
         this.name = name;
     }
 
+    @Override
+    public String toString() {
+        return getName() + " " + getTimeForDisplay();
+    }
+
     abstract String getTimeForDisplay();
 
 }

@@ -39,32 +39,7 @@ class User implements Serializable {
         this(userName, "");
     }
 
-    // Methods
-
-    /**
-     * Gets all the routines for this user.
-     * @return An ArrayList of all the user's routines.
-     */
-    ArrayList<Routine> getMyRoutines()
-    {
-        return myRoutines;
-    }
-    
-    void addRoutine(Routine routine)
-    {
-        this.myRoutines.add(routine);
-    }
-
-    String getName()
-    {
-        return name;
-    }
-
-    String getUserName()
-    {
-        return userName;
-    }
-
+    // Class Methods
     /**
      * Prompts the user for a username, cleans the input up a bit
      * Limits the number of tries for the user (a way to exit)
@@ -95,6 +70,31 @@ class User implements Serializable {
         return userName;
     }
 
+    // Methods
+
+    /**
+     * Gets all the routines for this user.
+     * @return An ArrayList of all the user's routines.
+     */
+    ArrayList<Routine> getMyRoutines()
+    {
+        return myRoutines;
+    }
+    
+    void addRoutine(Routine routine)
+    {
+        this.myRoutines.add(routine);
+    }
+
+    String getName()
+    {
+        return name;
+    }
+
+    String getUserName()
+    {
+        return userName;
+    }
 
     /**
      * Deletes ALL routines for the user, in memory.

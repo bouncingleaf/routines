@@ -75,12 +75,36 @@ class RoutineTest {
     @Test
     void edit() {
         addTwo();
-        String input = "1\nTest\n";
-        InputStream in = new ByteArrayInputStream(input.getBytes());
-        System.setIn(in);
-//            assertEquals("add 5", inputOutput.getInput());
-
-        testRoutine.edit(new Scanner(input));
+        // 1. Change the routine title
+        testEdit("1\n" + "New title!" + "\n\n");
+        assertEquals("New title!", testRoutine.getTitle());
+        // 2. Add tasks
+        testEdit("2\nAdded timed task\n30\n\n\n");
+        assertEquals(3, testRoutine.numberOfTasks());
+        assertEquals("Added timed task 30 min", testRoutine.getTaskByNumber(3));
+        testEdit("2\nAdded untimed task\n\n\n\n");
+        assertEquals(4, testRoutine.numberOfTasks());
+        assertEquals("Added untimed task (untimed)", testRoutine.getTaskByNumber(4));
+        // 3. Edit a task:
+        //   3a. Keep timed
+        testEdit("3\n1\nEdited Timed Name\n123\n\n\n");
+        assertEquals("Edited Timed Name 123 min", testRoutine.getTaskByNumber(1));
+        //   3b. Keep untimed
+        testEdit("3\n2\nEdited Untimed Name\n\n\n\n");
+        assertEquals("Edited Untimed Name (untimed)", testRoutine.getTaskByNumber(2));
+        //   3c. Make timed into untimed
+        testEdit("3\n3\nChanged to Untimed\n0\n\n\n");
+        assertEquals("Changed to Untimed (untimed)", testRoutine.getTaskByNumber(3));
+        //   3c. Make untimed into timed
+        testEdit("3\n4\nChanged to Timed\n321\n\n\n");
+        assertEquals("Changed to Timed 321 min", testRoutine.getTaskByNumber(4));
+        // Tests
         System.setIn(System.in);
+    }
+
+    private void testEdit (String testString) {
+        System.setIn(new ByteArrayInputStream(testString.getBytes()));
+        testRoutine.edit(new Scanner(System.in));
+
     }
 }

@@ -5,9 +5,8 @@ import java.util.ArrayList;
 import java.util.Scanner;
 
 /**
- * 
+ * The Routine class: a Routine is a list of tasks, with a title.
  * @author Jessica Roy
- *
  */
 class Routine implements Displayable, Serializable {
 
@@ -45,8 +44,22 @@ class Routine implements Displayable, Serializable {
         this.tasks.add(task);
     }
 
+    /**
+     * Get Task object by index number (0, 1, 2...)
+     * @param i The index of the task to get
+     * @return the Task at that index
+     */
     private Task getTask(int i) {
         return tasks.get(i);
+    }
+
+    /**
+     * Get task description by task number (1, 2, 3...)
+     * @param i The number of the task to get
+     * @return A string describing the task
+     */
+    String getTaskByNumber(int i) {
+        return tasks.get(i - 1).toString();
     }
 
     private void setTask(int i, Task task) {
@@ -123,29 +136,44 @@ class Routine implements Displayable, Serializable {
      * @param input The Scanner for getting user input
      */
     private void editModifyTask(Scanner input) {
-        Integer taskNumber = chooseATask(input, "Choose a task to edit");
-        if (taskNumber != null) {
-            Task taskToEdit = getTask(taskNumber);
+        Integer taskIndex = chooseATask(input, "Choose a task to edit");
+        if (taskIndex != null) {
+            Task taskToEdit = getTask(taskIndex);
+
+            // Prompt for the new name
             System.out.printf("New name (enter to keep \"%s\"):\n", taskToEdit.getName());
             String newName = input.nextLine();
             if (newName.length() < 1) {
                 newName = taskToEdit.getName();
             }
-            System.out.printf("New time (or 0 for untimed, or enter to keep %s):\n", taskToEdit.getTimeForDisplay());
-            int newTime;
+
+            // Prompt for the new time
+            if (taskToEdit instanceof UntimedTask) {
+                System.out.println("New time, or enter to keep untimed:");
+            } else {
+                System.out.printf("New time, enter to keep %s, 0 for untimed:\n", taskToEdit.getTimeForDisplay());
+            }
+
+            // Get the new time, if any
             try {
-                newTime = Integer.parseInt(input.nextLine());
+                String inputValue = input.nextLine();
+                if (inputValue.length() == 0) {
+                    // No new time - just update the name
+                    taskToEdit.setName(newName);
+                } else {
+                    // New time was specified, set the new task
+                    int newTime = Integer.parseInt(inputValue);
+                    if (newTime > 0) {
+                        setTask(taskIndex, new TimedTask(newName, newTime));
+                    } else {
+                        setTask(taskIndex, new UntimedTask(newName));
+                    }
+                }
             }
             catch (Exception e) {
-                newTime = 0;
+                // No time changes if input not an integer
+                taskToEdit.setName(newName);
             }
-            Task newTask;
-            if (newTime > 0) {
-                newTask = new UntimedTask(newName);
-            } else {
-                newTask = new TimedTask(newName, newTime);
-            }
-            setTask(taskNumber, newTask);
         } else {
             System.out.println("No changes made.");
         }
@@ -158,10 +186,10 @@ class Routine implements Displayable, Serializable {
      * @param input The Scanner for getting user input
      */
     private void editDeleteTask(Scanner input) {
-        Integer taskNumber = chooseATask(input, "Choose a task to delete");
-        if (taskNumber != null) {
-            Task taskToDelete = getTask(taskNumber);
-            deleteTask(taskNumber);
+        Integer taskIndex = chooseATask(input, "Choose a task to delete");
+        if (taskIndex != null) {
+            Task taskToDelete = getTask(taskIndex);
+            deleteTask(taskIndex);
             System.out.printf("Deleted task %s\t%s\n", taskToDelete.getName(), taskToDelete.getTimeForDisplay());
         } else {
             System.out.println("No task deleted.");
