@@ -3,7 +3,6 @@ package jmroy;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Scanner;
-import java.util.Timer;
 
 /**
  * 
@@ -11,9 +10,6 @@ import java.util.Timer;
  *
  */
 class Routine implements Displayable, Serializable {
-
-    // Class variables
-    private static final Timer timer = new Timer();
 
     // Instance variables
     
@@ -37,7 +33,6 @@ class Routine implements Displayable, Serializable {
         return title;
     }
 
-	// setTitle: For future use
     void setTitle(String title) {
         this.title = title;
     }
@@ -81,7 +76,7 @@ class Routine implements Displayable, Serializable {
     }
 
     /**
-     * Prompt the user for a new title for the routine and set it
+     * Prompts the user for a new title for the routine and sets it
      * @param input The Scanner for getting user input
      */
     private void changeRoutineName(Scanner input) {
@@ -95,8 +90,6 @@ class Routine implements Displayable, Serializable {
     /**
      * Prompts the user for the name and length of one or more tasks, adds the tasks to the
      * specified Routine
-     *
-     * Precondition: input is open to a Scanner
      * Precondition: Zero or more Tasks are added to the provided Routine
      * @param input The Scanner for getting user input
      */
@@ -123,6 +116,12 @@ class Routine implements Displayable, Serializable {
         }
     }
 
+    /**
+     * Prompts the user to choose a task to edit.
+     * If one is chosen, allows the user to enter a new name and/or time.
+     * If none is chosen, displays a message.
+     * @param input The Scanner for getting user input
+     */
     private void editModifyTask(Scanner input) {
         Integer taskNumber = chooseATask(input, "Choose a task to edit");
         if (taskNumber != null) {
@@ -148,10 +147,16 @@ class Routine implements Displayable, Serializable {
             }
             setTask(taskNumber, newTask);
         } else {
-            System.out.println("No task added.");
+            System.out.println("No changes made.");
         }
     }
 
+    /**
+     * Prompts the user to choose a task to delete.
+     * If one is chosen, deletes the task and displays the info deleted.
+     * If none is chosen, displays a message.
+     * @param input The Scanner for getting user input
+     */
     private void editDeleteTask(Scanner input) {
         Integer taskNumber = chooseATask(input, "Choose a task to delete");
         if (taskNumber != null) {
@@ -163,6 +168,15 @@ class Routine implements Displayable, Serializable {
         }
     }
 
+    /**
+     * Prompts the user to choose a task from the routine
+     * If a valid task is selected, the index number of the task is returned
+     * Otherwise, a message is displayed and null is returned
+     * @param input The Scanner for getting user input
+     * @param message The message to display with the prompt, e.g.
+     *                "Choose a task to delete"
+     * @return The index # of the selected task, or null if none is selected
+     */
     private Integer chooseATask(Scanner input, String message) {
         System.out.printf("%s (choose 1 - %d):\n", message, numberOfTasks());
         int selection;
@@ -181,9 +195,11 @@ class Routine implements Displayable, Serializable {
         }
     }
 
-    public void edit() {
-        Scanner editInput = new Scanner(System.in);
-        // The edit menu
+    /**
+     * Displays the edit menu, gets the user's choice, and switches
+     * to the correct routine to handle the choice.
+     */
+    void edit(Scanner editInput) {
         final String EDIT_MENU =
                 "1. Change the routine name\n" +
                         "2. Add a task\n" +
@@ -225,8 +241,10 @@ class Routine implements Displayable, Serializable {
         }
      }
 
+    /**
+     * For now, a simulation of running the routine
+     */
     void run() {
-        // Dummy for now
         System.out.printf("Simulation of running %s routine...\n", this.getTitle());
         Task currentTask;
         for (int i = 0; i < numberOfTasks(); i++) {

@@ -3,9 +3,8 @@ package jmroy;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.io.ByteArrayOutputStream;
-import java.io.OutputStream;
-import java.io.PrintStream;
+import java.io.*;
+import java.util.Scanner;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -20,6 +19,9 @@ class RoutineTest {
         testRoutine = new Routine(TITLE);
     }
 
+    /**
+     * Adds a timed task and an untimed task
+     */
     private void addTwo() {
         testRoutine.addTask(new TimedTask(TIMED, 3));
         testRoutine.addTask(new UntimedTask(UNTIMED));
@@ -67,7 +69,18 @@ class RoutineTest {
                 os.toString());
 
         //Restore normal output
-        PrintStream originalOut = System.out;
-        System.setOut(originalOut);
+        System.setOut(System.out);
+    }
+
+    @Test
+    void edit() {
+        addTwo();
+        String input = "1\nTest\n";
+        InputStream in = new ByteArrayInputStream(input.getBytes());
+        System.setIn(in);
+//            assertEquals("add 5", inputOutput.getInput());
+
+        testRoutine.edit(new Scanner(input));
+        System.setIn(System.in);
     }
 }
