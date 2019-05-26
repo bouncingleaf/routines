@@ -69,6 +69,29 @@ class User implements Serializable {
     }
 
     /**
+     * Lists all the routines for the user and all the tasks on each routine
+     * Precondition: A current user must be defined.
+     * Postcondition: If the user has routines, they are listed along with their tasks.
+     *   If the user has no routines, a message is displayed.
+     */
+    void listRoutines() {
+        // Get the routines
+        ArrayList<Routine> routines = getMyRoutines();
+        // If there aren't any, exit
+        if (routines.size() == 0) {
+            System.out.println("No routines found.\n");
+        }
+        // Otherwise, list the routines and their tasks
+        else {
+            System.out.println("Your routines:");
+            for (Routine routine : routines) {
+                routine.display();
+            }
+        }
+    }
+
+
+    /**
      * Loads a User object by reading and deserializing it from a user data file.
      * @param fileDir The directory the user data file is stored in.
      * @param userName The userName of the User to load.
@@ -92,18 +115,19 @@ class User implements Serializable {
      * @param fileDir The directory to store the user data file in.
      */
     void save (String fileDir) {
+        System.out.print("Saving data...");
         final String USER_FILE = fileDir + "USER_" + this.getUserName() + ".txt";
         try (FileOutputStream fileOutputStream = new FileOutputStream(USER_FILE)) {
             ObjectOutputStream objectOutputStream = new ObjectOutputStream(fileOutputStream);
             objectOutputStream.writeObject(this);
             objectOutputStream.flush();
             objectOutputStream.close();
+            System.out.println("done");
         }
         catch (IOException e) {
-            System.out.println("Problem saving user");
+            System.out.println("problem saving data");
             e.printStackTrace();
         }
-
     }
 
 }

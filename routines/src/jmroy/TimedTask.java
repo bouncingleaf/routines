@@ -1,8 +1,6 @@
 package jmroy;
 
 import java.io.Serializable;
-import java.util.Timer;
-import java.util.TimerTask;
 
 /**
  *
@@ -45,23 +43,4 @@ class TimedTask extends Task implements Serializable {
         return getMinutes() + " min";
     }
 
-    void countdown(Timer timer) {
-        timer.schedule(new TimeIt(this.getMinutes(), this.getName()), 0, 1000);
-    }
-
-    private class TimeIt extends TimerTask {
-        private int minutes;
-        private String name;
-
-        TimeIt (int min, String name) {
-            this.minutes = min;
-            this.name = name;
-        }
-        public void run() {
-            System.out.printf("test %s: %d\n", name, minutes--);
-            if (minutes <0 ) {
-                cancel();
-            }
-        }
-    }
 }
