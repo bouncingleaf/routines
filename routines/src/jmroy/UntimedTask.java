@@ -3,9 +3,7 @@ package jmroy;
 import java.io.Serializable;
 
 /**
- * 
  * @author Jessica Roy
- *
  */
 class UntimedTask extends Task implements Serializable {
 

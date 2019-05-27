@@ -5,9 +5,9 @@ import java.util.ArrayList;
 import java.util.Scanner;
 
 /**
- * 
+ * User class - manages the user's info including their routines
+ * Also responsible for loading/saving user data to storage.
  * @author Jessica Roy
- *
  */
 class User implements Serializable {
     
@@ -127,7 +127,6 @@ class User implements Serializable {
         }
     }
 
-
     /**
      * Loads a User object by reading and deserializing it from a user data file.
      * @param userName The userName of the User to load.
@@ -139,11 +138,15 @@ class User implements Serializable {
             ObjectInputStream objectInputStream = new ObjectInputStream((fileInputStream));
             return (User) objectInputStream.readObject();
         }
+        catch (InvalidClassException e) {
+            // Users should not see this...
+            System.out.println("Classes have changed, try clearing the files.");
+            return null;
+        }
         catch (ClassNotFoundException | IOException e) {
             e.printStackTrace();
             return null;
         }
-
     }
 
     /**
@@ -177,7 +180,7 @@ class User implements Serializable {
         ArrayList<Routine> routines = getMyRoutines();
         // If there aren't any, exit
         if (routines.size() == 0) {
-            System.out.println("No routines found.\n");
+            System.out.println("No routines found.");
             return null;
         }
         // Otherwise, list the routines and prompt the user to choose a routine

@@ -3,6 +3,10 @@ package jmroy;
 import java.io.*;
 import java.util.Scanner;
 
+/**
+ * RoutinesApp - main entry point for the Routines application
+ * @author Jessica Roy
+ */
 public class RoutinesApp {
     private static User user;
 
@@ -22,48 +26,59 @@ public class RoutinesApp {
     }
 
     /**
-     * Prompts for a user's name, gets the input, looks up the user in the
+     * Prompts for a user's username, gets the input, looks up the user in the
      * users file. If found, loads the user's data. If not found, starts a
      * new user. Either way (unless there's an error or no username entered),
      * establishes the User object, and greets the user.
      * @param input Scanner for the user's input
-     * @param userReader Scanner for the users file
-     * @param userWriter PrintWriter for the users file
      * @return the selected User, or null if one is not selected
      */
-    private static User getUser(Scanner input, Scanner userReader, PrintWriter userWriter) {
-        User newUser;
-        String userName = User.getValidUserName(input);
-        if (userName == null) {
+    private static User getUser(Scanner input) {
+        // Get the user whose routines we want to work with
+        File usersFile = new File(User.USERS_FILE);
+        // Establish readers and writers to the users file, and go get the user
+        try (
+                Scanner userReader = usersFile.exists() ? new Scanner(usersFile) : null;
+                PrintWriter userWriter = new PrintWriter(new FileOutputStream(usersFile, true))
+        ) {
+            User newUser;
+            String userName = User.getValidUserName(input);
+            if (userName == null) {
+                return null;
+            }
+            // Look for the username in the users file
+            boolean found = false;
+            if (userReader != null) {
+                while (userReader.hasNextLine() && !found) {
+                    found = userReader.nextLine().equals(userName);
+                }
+            }
+
+            if (found) {
+                newUser = User.load(userName);
+            } else {
+                System.out.println("Greetings new user. Enter your name (optional): ");
+
+                // Not the best sanitizing but it'll do
+                String name = input.nextLine().replaceAll("[^a-zA-Z0-9\']"," ");
+                newUser = new User(userName, name);
+
+                // Save username to the users file
+                userWriter.println(newUser.getUserName());
+
+                // Initial save of user data
+                newUser.save();
+            }
+
+            if (newUser != null) {
+                System.out.printf("Hello, %s\n\n", newUser.getName());
+            }
+            return newUser;
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
             return null;
         }
-        // Look for the username in the users file
-        boolean found = false;
-        if (userReader != null) {
-            while (userReader.hasNextLine() && !found) {
-                found = userReader.nextLine().equals(userName);
-            }
-        }
 
-        if (found) {
-            newUser = User.load(userName);
-        } else {
-            System.out.println("Greetings new user. Enter your name (optional): ");
-            // Not the best sanitizing but it'll do
-            String name = input.nextLine().replaceAll("[^a-zA-Z0-9\']"," ");
-            newUser = new User(userName, name);
-
-            // Save username to the users file
-            userWriter.println(newUser.getUserName());
-
-            // Initial save of user data
-            newUser.save();
-        }
-
-        if (newUser != null) {
-            System.out.printf("Hello, %s\n\n", newUser.getName());
-        }
-        return newUser;
     }
 
     /**
@@ -127,13 +142,11 @@ public class RoutinesApp {
                 done = true;
 			}
 		}
-        input.close();
 	}
 
     /**
      * The main method of the program. Loops on displaying a menu and accepting and handling
      * a menu choice from the user, until the user chooses to quit the application.
-     *
      * @param args command line arguments, not expecting any
      */
     public static void main(String[] args) {
@@ -143,18 +156,8 @@ public class RoutinesApp {
         // Display an application title
         System.out.println("Routines!\n");
 
-        // Get the user whose routines we want to work with
-        File usersFile = new File(User.USERS_FILE);
-        // Establish readers and writers to the users file, and go get the user
-        try (
-                Scanner userReader = usersFile.exists() ? new Scanner(usersFile) : null;
-                PrintWriter userWriter = new PrintWriter(new FileOutputStream(usersFile, true))
-            ) {
-            user = getUser(input, userReader, userWriter);
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-            user = null;
-        }
+        // Get the user
+        user = getUser(input);
 
         if (user == null) {
             // Something went wrong
@@ -166,6 +169,7 @@ public class RoutinesApp {
             // The user has opted to quit. Close the input and say goodbye.
             System.out.printf("Done. See you next time, %s!\n\n", user.getName());
         }
+        input.close();
         System.exit(0);
     }
 

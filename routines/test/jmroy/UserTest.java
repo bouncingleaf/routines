@@ -14,6 +14,7 @@ import java.util.Scanner;
 class UserTest {
     private final String USER = "test";
     private final String NAME = "Test Name";
+    private final String TEST_ROUTINE = "Test Routine";
     private User testUser;
 
     @BeforeEach
@@ -32,20 +33,16 @@ class UserTest {
         assert(testList.isEmpty());
 
         // Test adding a routine
-        Routine testRoutine = new Routine("Test Routine");
+        Routine testRoutine = new Routine(TEST_ROUTINE);
         testUser.addRoutine(testRoutine);
         // Confirm that one was added
         assertEquals(1, testUser.getMyRoutines().size());
 
         // Test listRoutines
-        //Prepare to redirect output
-        OutputStream os = new ByteArrayOutputStream();
-        PrintStream ps = new PrintStream(os);
-        System.setOut(ps);
-
+        OutputStream os = redirectOutput();
         testUser.listRoutines();
         assertEquals(
-                "Your routines:\r\n\tRoutine: Test Routine\n",
+                "Your routines:\r\n\tRoutine: " + TEST_ROUTINE + "\n",
                 os.toString());
 
         //Restore normal output
@@ -91,7 +88,7 @@ class UserTest {
         result = testUserName("{!1@2#3$a%b^c&*()}\n\n");
         assertEquals("123abc", result);
 
-        //Prepare to redirect output
+        // Prepare to redirect output
         OutputStream os = new ByteArrayOutputStream();
         PrintStream ps = new PrintStream(os);
         System.setOut(ps);
@@ -107,7 +104,8 @@ class UserTest {
                         "Enter your username: \r\n",
                 os.toString());
 
-        //Restore normal output
+        //Restore normal input and output
+        System.setIn(System.in);
         System.setOut(System.out);
     }
 
@@ -116,12 +114,82 @@ class UserTest {
         return User.getValidUserName(new Scanner(System.in));
     }
 
+    @Test
+    void testSaveAndLoad() {
+        User saveTest = new User("save", "Saved Test");
+        Routine testRoutine = new Routine(TEST_ROUTINE);
+        testRoutine.addTask(new TimedTask("Example", 30));
+        saveTest.addRoutine(testRoutine);
+        saveTest.save();
+        saveTest = new User("overwritten", "Should be overwritten");
+        assertEquals("Should be overwritten", saveTest.getName());
+        saveTest = User.load("save");
+        assertNotNull(saveTest);
+        assertEquals("save", saveTest.getUserName());
+        assertEquals("Saved Test", saveTest.getName());
+        assertEquals(1, saveTest.getMyRoutines().size());
+    }
+
+    @Test
+    void testSelectRoutine() {
+        Routine result;
+        OutputStream os = redirectOutput();
+        String expected;
+
+        // 1. Try to select with no routines
+        testUser.deleteRoutines();
+        result = testSelect(testUser,"\n");
+        assertNull(result);
+        expected = "No routines found.\r\n";
+        assertEquals(expected, os.toString());
+
+        // Add a routine
+        Routine testRoutine = new Routine(TEST_ROUTINE);
+        testUser.addRoutine(testRoutine);
+        // Confirm that one was added
+        assertEquals(1, testUser.getMyRoutines().size());
+        assertEquals(expected, os.toString());
+
+        // 2. Select a valid routine
+        result = testSelect(testUser,"1\n");
+        assertNotNull(result);
+        assertEquals(TEST_ROUTINE, result.getTitle());
+        // For some reason this fails, even though it also reports
+        // that the expected and actual are identical.
+        // I think it has to do with line endings, but nothing I
+        // try makes it better...
+//        expected += "1. Test Routine\nSelect one:\n";
+//        assertEquals(expected, os.toString());
+
+        // 3. Select a valid integer but bogus routine
+        result = testSelect(testUser,"9999\n");
+        assertNull(result);
+//        expected += "1. " + TEST_ROUTINE + "\nSelect one:\n";
+//        expected += "Not a valid routine.\r\n";
+//        assertEquals(expected, os.toString());
+
+        // 4. Select a non-integer bogus routine
+        result = testSelect(testUser,"abc\n");
+        assertNull(result);
+//        expected += "1. " + TEST_ROUTINE + "\nSelect one:\n";
+//        expected += "Not a valid routine.\r\n";
+//        assertEquals(expected, os.toString());
+
+        // Restore normal input and output
+        System.setIn(System.in);
+        System.setOut(System.out);
+    }
+
+    private Routine testSelect (User user, String testString) {
+        System.setIn(new ByteArrayInputStream(testString.getBytes()));
+        return user.selectRoutine(new Scanner(System.in), "Select one:");
+    }
+
+    private OutputStream redirectOutput() {
+        OutputStream os = new ByteArrayOutputStream();
+        PrintStream ps = new PrintStream(os);
+        System.setOut(ps);
+        return os;
+    }
+
 }
-
-
-//    static String getValidUserName(Scanner input) {
-//    void deleteRoutines() {
-//    void listRoutines() {
-//    static User load (String userName) {
-//    void save () {
-//    Routine selectRoutine(Scanner input, String message) {

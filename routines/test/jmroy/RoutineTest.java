@@ -95,10 +95,20 @@ class RoutineTest {
         //   3c. Make timed into untimed
         testEdit("3\n3\nChanged to Untimed\n0\n\n\n");
         assertEquals("Changed to Untimed (untimed)", testRoutine.getTaskByNumber(3));
-        //   3c. Make untimed into timed
+        //   3d. Make untimed into timed
         testEdit("3\n4\nChanged to Timed\n321\n\n\n");
         assertEquals("Changed to Timed 321 min", testRoutine.getTaskByNumber(4));
-        // Tests
+        //   3e. Bogus edit
+        testEdit("3\n1\nSecond Edit Timed\nabc\n\n\n");
+        assertEquals("Second Edit Timed 123 min", testRoutine.getTaskByNumber(1));
+        //   3f. No name edit
+        testEdit("3\n2\n\n\n\n\n");
+        assertEquals("Edited Untimed Name (untimed)", testRoutine.getTaskByNumber(2));
+
+        // 4. Delete a task:
+        testEdit("4\n4\n\n");
+        assertEquals(3, testRoutine.numberOfTasks());
+
         System.setIn(System.in);
     }
 
