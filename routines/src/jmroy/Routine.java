@@ -136,8 +136,8 @@ class Routine implements Displayable, Serializable {
      * @param input The Scanner for getting user input
      */
     private void editModifyTask(Scanner input) {
-        Integer taskIndex = chooseATask(input, "Choose a task to edit");
-        if (taskIndex != null) {
+        try {
+            Integer taskIndex = selectTask(input, "Choose a task to edit");
             Task taskToEdit = getTask(taskIndex);
 
             // Prompt for the new name
@@ -174,8 +174,9 @@ class Routine implements Displayable, Serializable {
                 // No time changes if input not an integer
                 taskToEdit.setName(newName);
             }
-        } else {
-            System.out.println("No changes made.");
+        }
+        catch (SelectTaskException e) {
+            System.out.println(e.getMessage());
         }
     }
 
@@ -186,13 +187,14 @@ class Routine implements Displayable, Serializable {
      * @param input The Scanner for getting user input
      */
     private void editDeleteTask(Scanner input) {
-        Integer taskIndex = chooseATask(input, "Choose a task to delete");
-        if (taskIndex != null) {
+        try {
+            Integer taskIndex = selectTask(input, "Choose a task to delete");
             Task taskToDelete = getTask(taskIndex);
             deleteTask(taskIndex);
             System.out.printf("Deleted task %s\t%s\n", taskToDelete.getName(), taskToDelete.getTimeForDisplay());
-        } else {
-            System.out.println("No task deleted.");
+        }
+        catch (SelectTaskException e) {
+            System.out.println(e.getMessage());
         }
     }
 
@@ -205,7 +207,7 @@ class Routine implements Displayable, Serializable {
      *                "Choose a task to delete"
      * @return The index # of the selected task, or null if none is selected
      */
-    private Integer chooseATask(Scanner input, String message) {
+    private Integer selectTask(Scanner input, String message) throws SelectTaskException {
         System.out.printf("%s (choose 1 - %d):\n", message, numberOfTasks());
         int selection;
         try {
@@ -213,13 +215,11 @@ class Routine implements Displayable, Serializable {
             if (selection > 0 && selection <= numberOfTasks()) {
                 return selection - 1;
             } else {
-                // Valid integer, but not on the list? Display message
-                System.out.println("Not a valid task.");
-                return null;
+                // Valid integer, but not on the list
+                throw(new SelectTaskException("Not a valid task."));
             }
         } catch (NumberFormatException e) {
-            System.out.println("Not a valid task.");
-            return null;
+            throw(new SelectTaskException("Not a valid task."));
         }
     }
 
@@ -280,15 +280,16 @@ class Routine implements Displayable, Serializable {
             System.out.println();
             currentTask.display();
             if (currentTask instanceof TimedTask) {
-                int count = 0;
+                int count = 1;
                 for (int j = ((TimedTask) currentTask).getMinutes(); j > 0; j--) {
-                    System.out.printf("%02d minutes", j);
-                    System.out.print(count++%10 == 0 ? "\n" : "...");
+                    System.out.printf("%02d:00", j);
+                    System.out.print(count++%10 == 0 ? "...\n" : "...");
                 }
+                System.out.println("Timer done");
             } else {
                 System.out.println("Untimed!");
             }
         }
-        System.out.println("Real functionality coming soon");
+        System.out.println("\nReal functionality coming soon");
     }
 }

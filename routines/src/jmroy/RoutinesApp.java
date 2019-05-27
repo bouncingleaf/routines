@@ -20,9 +20,13 @@ public class RoutinesApp {
     private static Routine createNewRoutine(Scanner input) {
         System.out.println("Enter the name of the routine (e.g. 'My morning routine'): ");
         String routineName = input.nextLine();
-        Routine newRoutine = new Routine(routineName);
-        newRoutine.addTasksToRoutine(input);
-        return newRoutine;
+        if (routineName.length() > 0 ) {
+            Routine newRoutine = new Routine(routineName);
+            newRoutine.addTasksToRoutine(input);
+            return newRoutine;
+        } else {
+            return null;
+        }
     }
 
     /**
@@ -114,23 +118,33 @@ public class RoutinesApp {
                     choice = Integer.parseInt(inputValue);
                     switch (choice) {
                         case 1:
-                            user.addRoutine(createNewRoutine(input));
-                            user.save();
+                            Routine newRoutine = createNewRoutine(input);
+                            if (newRoutine != null) {
+                                user.addRoutine(newRoutine);
+                                user.save();
+                            }
                             break;
                         case 2:
                             user.listRoutines();
                             break;
                         case 3:
-                            Routine routineToEdit = user.selectRoutine(input, "Choose a routine to edit: ");
-                            if (routineToEdit != null) {
+                            try {
+                                Routine routineToEdit = user.selectRoutine(input, "Choose a routine to edit: ");
                                 routineToEdit.edit(input);
                                 user.save();
                             }
+                            catch (SelectRoutineException e) {
+                                System.out.println(e.getMessage());
+                            }
                             break;
                         case 4:
-                            Routine routineToRun = user.selectRoutine(input, "Choose a routine to run: ");
-                            if (routineToRun != null) {
+                            try {
+                                Routine routineToRun = user.selectRoutine(input, "Choose a routine to run: ");
                                 routineToRun.run();
+                                user.save();
+                            }
+                            catch (SelectRoutineException e) {
+                                System.out.println(e.getMessage());
                             }
                             break;
                         default:

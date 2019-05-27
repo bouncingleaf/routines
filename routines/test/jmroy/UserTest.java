@@ -157,7 +157,7 @@ class UserTest {
         // For some reason this fails, even though it also reports
         // that the expected and actual are identical.
         // I think it has to do with line endings, but nothing I
-        // try makes it better...
+        // do makes it better...
 //        expected += "1. Test Routine\nSelect one:\n";
 //        assertEquals(expected, os.toString());
 
