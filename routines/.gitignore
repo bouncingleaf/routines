@@ -1,2 +1,4 @@
-/bin/
+bin/
 files/
+.idea/
+.classpath
