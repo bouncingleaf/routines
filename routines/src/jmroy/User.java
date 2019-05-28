@@ -175,12 +175,12 @@ class User implements Serializable {
      * Precondition: input is open to a Scanner
      * @return a Routine if one is selected, null otherwise
      */
-     Routine selectRoutine(Scanner input, String message) throws SelectRoutineException {
+     Routine selectRoutine(Scanner input, String message) throws InvalidSelectionException {
         // Get the routines
         ArrayList<Routine> routines = getMyRoutines();
         // If there aren't any, exit
         if (routines.size() == 0) {
-            throw(new SelectRoutineException("No routines found."));
+            throw(new InvalidSelectionException("No routines found."));
         }
         // Otherwise, list the routines and prompt the user to choose a routine
         for (int i = 0; i < routines.size(); i++) {
@@ -194,10 +194,10 @@ class User implements Serializable {
                 return routines.get(selection - 1);
             } else {
                 // Valid integer, but not on the list
-                throw(new SelectRoutineException("Not a valid routine."));
+                throw(new InvalidSelectionException("Not a valid routine."));
             }
         } catch (NumberFormatException e) {
-            throw(new SelectRoutineException("Not a valid routine."));
+            throw(new InvalidSelectionException("Not a valid routine."));
         }
     }
 

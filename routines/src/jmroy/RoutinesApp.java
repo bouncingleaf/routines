@@ -133,7 +133,7 @@ public class RoutinesApp {
                                 routineToEdit.edit(input);
                                 user.save();
                             }
-                            catch (SelectRoutineException e) {
+                            catch (InvalidSelectionException e) {
                                 System.out.println(e.getMessage());
                             }
                             break;
@@ -143,7 +143,7 @@ public class RoutinesApp {
                                 routineToRun.run();
                                 user.save();
                             }
-                            catch (SelectRoutineException e) {
+                            catch (InvalidSelectionException e) {
                                 System.out.println(e.getMessage());
                             }
                             break;

@@ -175,7 +175,7 @@ class Routine implements Displayable, Serializable {
                 taskToEdit.setName(newName);
             }
         }
-        catch (SelectTaskException e) {
+        catch (InvalidSelectionException e) {
             System.out.println(e.getMessage());
         }
     }
@@ -193,7 +193,7 @@ class Routine implements Displayable, Serializable {
             deleteTask(taskIndex);
             System.out.printf("Deleted task %s\t%s\n", taskToDelete.getName(), taskToDelete.getTimeForDisplay());
         }
-        catch (SelectTaskException e) {
+        catch (InvalidSelectionException e) {
             System.out.println(e.getMessage());
         }
     }
@@ -207,7 +207,7 @@ class Routine implements Displayable, Serializable {
      *                "Choose a task to delete"
      * @return The index # of the selected task, or null if none is selected
      */
-    private Integer selectTask(Scanner input, String message) throws SelectTaskException {
+    private Integer selectTask(Scanner input, String message) throws InvalidSelectionException {
         System.out.printf("%s (choose 1 - %d):\n", message, numberOfTasks());
         int selection;
         try {
@@ -216,10 +216,10 @@ class Routine implements Displayable, Serializable {
                 return selection - 1;
             } else {
                 // Valid integer, but not on the list
-                throw(new SelectTaskException("Not a valid task."));
+                throw(new InvalidSelectionException("Not a valid task."));
             }
         } catch (NumberFormatException e) {
-            throw(new SelectTaskException("Not a valid task."));
+            throw(new InvalidSelectionException("Not a valid task."));
         }
     }
 
