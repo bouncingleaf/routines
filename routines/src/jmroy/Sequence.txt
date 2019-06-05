@@ -1,10 +1,12 @@
-Sequence.txt
+/'
+  Sequence.txt, Jessica Roy
 
-Useful links:
-https://www.lucidchart.com/pages/uml/uml-sequence-markup
-https://lucidchart.zendesk.com/hc/en-us/articles/208029986
+  Useful links:
+  https://www.lucidchart.com/pages/uml/uml-sequence-markup
+  https://lucidchart.zendesk.com/hc/en-us/articles/208029986
 
-This is the text used for generating the basic Sequence diagram on LucidChart.
+  This is the text used for generating the basic Sequence diagram on LucidChart.
+'/
 
 activate RoutinesApp
 RoutinesApp->RoutinesApp:getValidUserName()
@@ -17,7 +19,8 @@ else found in USERS file
   Storage-->User: user data
 end
 loop main
-  alt choice 1
+    RoutinesApp->User:listRoutines()
+  alt choice 1 Add Routine
     RoutinesApp->User:addRoutine()
     User->Routine:new
     activate Routine
@@ -26,27 +29,42 @@ loop main
       activate Task
     end
     User->Storage:save()
-  else choice 2
-    RoutinesApp->User:listRoutines()
-    User-->RoutinesApp:routines
-  else choice 3
+  else choice 2 Manage Routines
     RoutinesApp->User:selectRoutine()
-    User-->RoutinesApp:routineToEdit
+    User-->Selection:selectItem()
+    activate Selection
+    Selection->User:index of Routine
+    deactivate Selection
+    User->RoutinesApp:routineToEdit
     RoutinesApp->Routine:routineToEdit.edit()
-    alt choice 1
+    alt choice 1 Change Routine Name
       Routine->Routine:changeRoutineName()
-    else choice 2
+    else choice 2 Add Tasks
       loop addTasksToRoutine
          Routine->Task:new
       end
-    else choice 3
-      Routine->Task:editModifyTask()
-    else choice 4
-      Routine->Task:editDeleteTask()
+    else choice 3 Edit Tasks
+      RoutinesApp-->Routine:editModifyTask()
+      Routine->Routine:selectTask()
+      Routine-->Selection:selectItem()
+      activate Selection
+      Selection->Routine: index of Task
+      deactivate Selection
+    else choice 4 Delete Tasks
+      RoutinesApp->Routine:editDeleteTask()
+      Routine->Routine:selectTask()
+      Routine-->Selection:selectItem()
+      activate Selection
+      Selection->Routine: index of Task
+      deactivate Selection
     end
     User->Storage:save()
-  else choice 4
+  else choice 3 Run Routine
     RoutinesApp->User:selectRoutine()
+    User-->Selection:selectItem()
+    activate Selection
+    Selection->User:index of Routine
+    deactivate Selection
     User-->RoutinesApp:routineToRun
     RoutinesApp->Routine:routineToRun.run()
     Routine-->RoutinesApp:tasks
