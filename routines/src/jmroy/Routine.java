@@ -8,7 +8,11 @@ import java.util.Scanner;
  * The Routine class: a Routine is a list of tasks, with a title.
  * @author Jessica Roy
  */
-class Routine implements Displayable, Serializable {
+class Routine implements Selectable, Serializable {
+
+    // Class constants
+    static final String SINGULAR = "routine";
+    static final String PLURAL = "routines";
 
     // Instance variables
     
@@ -27,10 +31,13 @@ class Routine implements Displayable, Serializable {
     }
 
     // Methods
-    
-    String getTitle() {
+
+    // For Selectable interface
+    public String getName() {
         return title;
     }
+
+    String getTitle() { return title; }
 
     void setTitle(String title) {
         this.title = title;
@@ -53,15 +60,17 @@ class Routine implements Displayable, Serializable {
         return tasks.get(i);
     }
 
+    private ArrayList<Task> getTasks() { return tasks; }
+
     /**
      * Get task description by task number (1, 2, 3...)
      * @param i The number of the task to get
      * @return A string describing the task
      */
-    String getTaskByNumber(int i) {
+    String getTaskByIndex(int i) {
         return tasks.get(i - 1).toString();
     }
-
+    
     private void setTask(int i, Task task) {
         tasks.set(i, task);
     }
@@ -74,13 +83,13 @@ class Routine implements Displayable, Serializable {
      * Displays a routine and lists out the current tasks and their times, in order.
      */
     public void display() {
-        System.out.printf("\tRoutine: %s\n", this.getTitle());
+        System.out.printf("%s\n", this.getTitle());
         Task currentTask;
         // Print out the list of tasks and their times
         for (int i = 0; i < numberOfTasks(); i++) {
             currentTask = getTask(i);
             System.out.printf(
-                "\t\t%d\t%s\t%s\n",
+                "\t%d\t%s\t%s\n",
                 i + 1,
                 currentTask.getName(),
                 currentTask.getTimeForDisplay()
@@ -137,7 +146,7 @@ class Routine implements Displayable, Serializable {
      */
     private void editModifyTask(Scanner input) {
         try {
-            Integer taskIndex = selectTask(input, "Choose a task to edit");
+            int taskIndex = selectTask(input, "Choose a task to edit");
             Task taskToEdit = getTask(taskIndex);
 
             // Prompt for the new name
@@ -188,7 +197,7 @@ class Routine implements Displayable, Serializable {
      */
     private void editDeleteTask(Scanner input) {
         try {
-            Integer taskIndex = selectTask(input, "Choose a task to delete");
+            int taskIndex = selectTask(input, "Choose a task to delete");
             Task taskToDelete = getTask(taskIndex);
             deleteTask(taskIndex);
             System.out.printf("Deleted task %s\t%s\n", taskToDelete.getName(), taskToDelete.getTimeForDisplay());
@@ -199,28 +208,14 @@ class Routine implements Displayable, Serializable {
     }
 
     /**
-     * Prompts the user to choose a task from the routine
-     * If a valid task is selected, the index number of the task is returned
-     * Otherwise, a message is displayed and null is returned
-     * @param input The Scanner for getting user input
-     * @param message The message to display with the prompt, e.g.
-     *                "Choose a task to delete"
-     * @return The index # of the selected task, or null if none is selected
+     * Selects a task from the routine's list of tasks
+     * @param input Scanner for user input
+     * @param message Message to display before selection is made
+     * @return index of selected task, if one is selected
+     * @throws InvalidSelectionException if no valid selection is made
      */
     private Integer selectTask(Scanner input, String message) throws InvalidSelectionException {
-        System.out.printf("%s (choose 1 - %d):\n", message, numberOfTasks());
-        int selection;
-        try {
-            selection = Integer.parseInt(input.nextLine());
-            if (selection > 0 && selection <= numberOfTasks()) {
-                return selection - 1;
-            } else {
-                // Valid integer, but not on the list
-                throw(new InvalidSelectionException("Not a valid task."));
-            }
-        } catch (NumberFormatException e) {
-            throw(new InvalidSelectionException("Not a valid task."));
-        }
+        return new Selection<Task>().selectItem(input, getTasks(), message, Task.SINGULAR, Task.PLURAL);
     }
 
     /**
@@ -229,7 +224,7 @@ class Routine implements Displayable, Serializable {
      */
     void edit(Scanner editInput) {
         final String EDIT_MENU =
-                "1. Change the routine name\n" +
+                        "1. Change the routine name\n" +
                         "2. Add a task\n" +
                         "3. Edit a task\n" +
                         "4. Delete a task\n" +
@@ -238,9 +233,10 @@ class Routine implements Displayable, Serializable {
         boolean done = false;
         int choice;
 
-        display();
         while (!done) {
             // Show the menu
+            System.out.print("\nManage Routine: ");
+            this.display();
             System.out.println(EDIT_MENU);
 
             // Get the user's choice

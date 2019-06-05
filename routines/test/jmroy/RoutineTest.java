@@ -63,9 +63,9 @@ class RoutineTest {
 
         testRoutine.display();
         assertEquals(
-                "\tRoutine: " + TITLE + "\n" +
-                        "\t\t1\t" + TIMED + "\t3 min\n" +
-                        "\t\t2\t" + UNTIMED + "\t(untimed)\n",
+                TITLE + "\n" +
+                        "\t1\t" + TIMED + "\t3 min\n" +
+                        "\t2\t" + UNTIMED + "\t(untimed)\n",
                 os.toString());
 
         //Restore normal output
@@ -77,39 +77,63 @@ class RoutineTest {
         addTwo();
         // 1. Change the routine title
         testEdit("1\n" + "New title!" + "\n\n");
-        assertEquals("New title!", testRoutine.getTitle());
+        assertEquals("New title!", testRoutine.getName());
         // 2. Add tasks
         testEdit("2\nAdded timed task\n30\n\n\n");
         assertEquals(3, testRoutine.numberOfTasks());
-        assertEquals("Added timed task 30 min", testRoutine.getTaskByNumber(3));
+        assertEquals("Added timed task 30 min", testRoutine.getTaskByIndex(3));
         testEdit("2\nAdded untimed task\n\n\n\n");
         assertEquals(4, testRoutine.numberOfTasks());
-        assertEquals("Added untimed task (untimed)", testRoutine.getTaskByNumber(4));
+        assertEquals("Added untimed task (untimed)", testRoutine.getTaskByIndex(4));
         // 3. Edit a task:
         //   3a. Keep timed
         testEdit("3\n1\nEdited Timed Name\n123\n\n\n");
-        assertEquals("Edited Timed Name 123 min", testRoutine.getTaskByNumber(1));
+        assertEquals("Edited Timed Name 123 min", testRoutine.getTaskByIndex(1));
         //   3b. Keep untimed
         testEdit("3\n2\nEdited Untimed Name\n\n\n\n");
-        assertEquals("Edited Untimed Name (untimed)", testRoutine.getTaskByNumber(2));
+        assertEquals("Edited Untimed Name (untimed)", testRoutine.getTaskByIndex(2));
         //   3c. Make timed into untimed
         testEdit("3\n3\nChanged to Untimed\n0\n\n\n");
-        assertEquals("Changed to Untimed (untimed)", testRoutine.getTaskByNumber(3));
+        assertEquals("Changed to Untimed (untimed)", testRoutine.getTaskByIndex(3));
         //   3d. Make untimed into timed
         testEdit("3\n4\nChanged to Timed\n321\n\n\n");
-        assertEquals("Changed to Timed 321 min", testRoutine.getTaskByNumber(4));
+        assertEquals("Changed to Timed 321 min", testRoutine.getTaskByIndex(4));
         //   3e. Bogus edit
         testEdit("3\n1\nSecond Edit Timed\nabc\n\n\n");
-        assertEquals("Second Edit Timed 123 min", testRoutine.getTaskByNumber(1));
+        assertEquals("Second Edit Timed 123 min", testRoutine.getTaskByIndex(1));
         //   3f. No name edit
         testEdit("3\n2\n\n\n\n\n");
-        assertEquals("Edited Untimed Name (untimed)", testRoutine.getTaskByNumber(2));
-
-        // 4. Delete a task:
-        testEdit("4\n4\n\n");
-        assertEquals(3, testRoutine.numberOfTasks());
+        assertEquals("Edited Untimed Name (untimed)", testRoutine.getTaskByIndex(2));
 
         System.setIn(System.in);
+    }
+
+    @Test
+    void delete() {
+        addTwo();
+
+        // Bogus task choice to delete
+        // Prepare to redirect output
+        OutputStream os = new ByteArrayOutputStream();
+        PrintStream ps = new PrintStream(os);
+        System.setOut(ps);
+
+        testEdit("4\nabcdef\n\n");
+        // The 13th line of the results is the error
+        String errorLine = os.toString().split("\n")[13];
+        assertEquals(
+                "Not a valid task.\r",
+                errorLine);
+
+        //Restore normal output
+        System.setOut(System.out);
+
+        // Delete a task:
+        testEdit("4\n1\n\n");
+        assertEquals(1, testRoutine.numberOfTasks());
+
+        System.setIn(System.in);
+
     }
 
     private void testEdit (String testString) {

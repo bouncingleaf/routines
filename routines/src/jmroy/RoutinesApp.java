@@ -8,7 +8,6 @@ import java.util.Scanner;
  * @author Jessica Roy
  */
 public class RoutinesApp {
-    private static User user;
 
     /**
      * Prompts the user for the name of a new routine, adds one or more tasks to the
@@ -22,7 +21,6 @@ public class RoutinesApp {
         String routineName = input.nextLine();
         if (routineName.length() > 0 ) {
             Routine newRoutine = new Routine(routineName);
-            newRoutine.addTasksToRoutine(input);
             return newRoutine;
         } else {
             return null;
@@ -73,10 +71,6 @@ public class RoutinesApp {
                 // Initial save of user data
                 newUser.save();
             }
-
-            if (newUser != null) {
-                System.out.printf("Hello, %s\n\n", newUser.getName());
-            }
             return newUser;
         } catch (FileNotFoundException e) {
             e.printStackTrace();
@@ -91,22 +85,22 @@ public class RoutinesApp {
      * chooses to exit.
      * @param input Scanner for the user's input
      */
-    private static void mainMenuLoop(Scanner input) {
+    private static void mainMenuLoop(Scanner input, User user) {
 		// The main menu
 		final String MENU =
-                "\nMAIN MENU\n" +
-				"1. Enter a new routine\n" +
-                "2. List routines\n" +
-                "3. Edit a routine\n" +
-                "4. Run a routine\n" +
-                "Anything else to quit.\n" +
+                "\n1. Add a routine\n" +
+                "2. Manage routines\n" +
+                "3. Run a routine\n" +
+            	"Anything else to quit.\n" +
                 "Choice: ";
 
 		boolean done = false;
 		int choice;
 
 		while (!done) {
-			// Show the menu
+			// Show the menu, list the user's routines below it
+            System.out.println("\nHome\n");
+            user.listRoutines();
 			System.out.println(MENU);
 
 			// Get the user's choice
@@ -114,33 +108,30 @@ public class RoutinesApp {
                 String inputValue = input.nextLine();
                 if (inputValue.length() == 0) {
                     done = true;
+                } else if (inputValue.toLowerCase() == "m") {
                 } else {
                     choice = Integer.parseInt(inputValue);
                     switch (choice) {
                         case 1:
                             Routine newRoutine = createNewRoutine(input);
                             if (newRoutine != null) {
+                                newRoutine.addTasksToRoutine(input);
                                 user.addRoutine(newRoutine);
                                 user.save();
                             }
                             break;
                         case 2:
-                            user.listRoutines();
-                            break;
-                        case 3:
                             try {
-                                Routine routineToEdit = user.selectRoutine(input, "Choose a routine to edit: ");
-                                routineToEdit.edit(input);
+                                user.selectRoutine(input, "Choose a routine to edit: ").edit(input);
                                 user.save();
                             }
                             catch (InvalidSelectionException e) {
                                 System.out.println(e.getMessage());
                             }
                             break;
-                        case 4:
+                        case 3:
                             try {
-                                Routine routineToRun = user.selectRoutine(input, "Choose a routine to run: ");
-                                routineToRun.run();
+                                user.selectRoutine(input, "Choose a routine to run: ").run();
                                 user.save();
                             }
                             catch (InvalidSelectionException e) {
@@ -171,14 +162,14 @@ public class RoutinesApp {
         System.out.println("Routines!\n");
 
         // Get the user
-        user = getUser(input);
+        User user = getUser(input);
 
         if (user == null) {
             // Something went wrong
             System.out.println("Goodbye.");
         } else {
             // Display the menu, get the user's choice, handle it
-            mainMenuLoop(input);
+            mainMenuLoop(input, user);
 
             // The user has opted to quit. Close the input and say goodbye.
             System.out.printf("Done. See you next time, %s!\n\n", user.getName());

@@ -10,9 +10,14 @@ import java.util.Scanner;
  * @author Jessica Roy
  */
 class User implements Serializable {
-    
+
+    // Class constant
+
+    // Usernames may not begin with this string - reserved for unit testing
+    static final String TEST_USER = "junittest";
+
     // Instance variables
-    
+
     private ArrayList<Routine> myRoutines;
     private String name;
     private String userName;
@@ -20,7 +25,7 @@ class User implements Serializable {
             + System.getProperty("file.separator")
             + "files"
             + System.getProperty("file.separator");
-    static final String USERS_FILE = FILE_DIR + "ALL_USERS.txt";
+    static final String USERS_FILE = FILE_DIR + "ALL_USERS";
 
     // Constructors
     
@@ -43,6 +48,7 @@ class User implements Serializable {
     /**
      * Prompts the user for a username, cleans the input up a bit
      * Limits the number of tries for the user (a way to exit)
+     * Does not save the user or look for saved users
      * @param input Scanner for user's input
      * @return String with the user's name, or null
      */
@@ -61,6 +67,10 @@ class User implements Serializable {
                     .toLowerCase()
                     .replaceAll("[^a-z0-9]", "");
             userName = userName.length() < MAX_USERNAME_LENGTH ? userName : userName.substring(0, MAX_USERNAME_LENGTH);
+            if (userName.startsWith(TEST_USER)) {
+                System.out.printf("Sorry, %s is a reserved name\n", userName);
+                userName = "";
+            }
         }
 
         // If they still haven't entered anything valid, exit
@@ -70,7 +80,7 @@ class User implements Serializable {
         return userName;
     }
 
-    // Methods
+    // Instance Methods
 
     /**
      * Gets all the routines for this user.
@@ -80,10 +90,10 @@ class User implements Serializable {
     {
         return myRoutines;
     }
-    
+
     void addRoutine(Routine routine)
     {
-        this.myRoutines.add(routine);
+        myRoutines.add(routine);
     }
 
     String getName()
@@ -95,6 +105,8 @@ class User implements Serializable {
     {
         return userName;
     }
+
+    private Routine getRoutineByIndex(int i) { return this.myRoutines.get(i); }
 
     /**
      * Deletes ALL routines for the user, in memory.
@@ -116,13 +128,13 @@ class User implements Serializable {
         ArrayList<Routine> routines = getMyRoutines();
         // If there aren't any, exit
         if (routines.size() == 0) {
-            System.out.println("No routines found.\n");
+            System.out.printf("No routines yet for %s.\n", getName());
         }
         // Otherwise, list the routines and their tasks
         else {
-            System.out.println("Your routines:");
+            System.out.printf("%s's routines:\n", getName());
             for (Routine routine : routines) {
-                routine.display();
+                System.out.printf("\t%s", routine.getTitle());
             }
         }
     }
@@ -133,7 +145,7 @@ class User implements Serializable {
      * @return The User object loaded from the file.
      */
     static User load (String userName) {
-        final String USER_FILE = FILE_DIR + "USER_" + userName + ".txt";
+        final String USER_FILE = FILE_DIR + "USER_" + userName;
         try (FileInputStream fileInputStream = new FileInputStream(USER_FILE)) {
             ObjectInputStream objectInputStream = new ObjectInputStream((fileInputStream));
             return (User) objectInputStream.readObject();
@@ -153,14 +165,12 @@ class User implements Serializable {
      * Serializes the User object and saves the data to a file specific to that user.
      */
     void save () {
-        System.out.print("Saving data...");
-        final String USER_FILE = FILE_DIR + "USER_" + this.getUserName() + ".txt";
+        final String USER_FILE = FILE_DIR + "USER_" + this.getUserName();
         try (FileOutputStream fileOutputStream = new FileOutputStream(USER_FILE)) {
             ObjectOutputStream objectOutputStream = new ObjectOutputStream(fileOutputStream);
             objectOutputStream.writeObject(this);
             objectOutputStream.flush();
             objectOutputStream.close();
-            System.out.println("done");
         }
         catch (IOException e) {
             System.out.println("problem saving data");
@@ -171,34 +181,19 @@ class User implements Serializable {
     /**
      * Displays a list of routines for the user and prompts for a selection.
      *
-     * Precondition: A current user must be defined.
-     * Precondition: input is open to a Scanner
-     * @return a Routine if one is selected, null otherwise
+     * @param input Scanner for user input
+     * @param message Message to display before selection is made
+     * @return a Routine, if one is selected
+     * @throws InvalidSelectionException if no valid selection is made
      */
-     Routine selectRoutine(Scanner input, String message) throws InvalidSelectionException {
-        // Get the routines
-        ArrayList<Routine> routines = getMyRoutines();
-        // If there aren't any, exit
-        if (routines.size() == 0) {
-            throw(new InvalidSelectionException("No routines found."));
-        }
-        // Otherwise, list the routines and prompt the user to choose a routine
-        for (int i = 0; i < routines.size(); i++) {
-            System.out.printf("%d. %s\n", i + 1, routines.get(i).getTitle());
-        }
-        System.out.println(message);
-        int selection;
-        try {
-            selection = Integer.parseInt(input.nextLine());
-            if (selection > 0 && selection <= routines.size()) {
-                return routines.get(selection - 1);
-            } else {
-                // Valid integer, but not on the list
-                throw(new InvalidSelectionException("Not a valid routine."));
-            }
-        } catch (NumberFormatException e) {
-            throw(new InvalidSelectionException("Not a valid routine."));
-        }
+    Routine selectRoutine(Scanner input, String message) throws InvalidSelectionException {
+        int selection = new Selection<Routine>().selectItem(
+                input,
+                getMyRoutines(),
+                message,
+                Routine.SINGULAR,
+                Routine.PLURAL);
+        return getRoutineByIndex(selection);
     }
 
 }

@@ -32,20 +32,24 @@ class UserTest {
         ArrayList<Routine> testList = testUser.getMyRoutines();
         assert(testList.isEmpty());
 
+        // Test listRoutines with no routines
+        OutputStream os = redirectOutput();
+        testUser.listRoutines();
+        String expected = "No routines yet for " + NAME + ".\n";
+        assertEquals(expected, os.toString());
+
         // Test adding a routine
         Routine testRoutine = new Routine(TEST_ROUTINE);
         testUser.addRoutine(testRoutine);
         // Confirm that one was added
         assertEquals(1, testUser.getMyRoutines().size());
 
-        // Test listRoutines
-        OutputStream os = redirectOutput();
+        // Test listRoutines with one routine
         testUser.listRoutines();
-        assertEquals(
-                "Your routines:\r\n\tRoutine: " + TEST_ROUTINE + "\n",
-                os.toString());
+        expected += NAME + "'s routines:\n\t" + TEST_ROUTINE;
+        assertEquals(expected, os.toString());
 
-        //Restore normal output
+        // Restore normal output
         System.setOut(System.out);
 
         // Now we KNOW test user has at least one routine
@@ -80,21 +84,25 @@ class UserTest {
 
     @Test
     void testGetValidUserName() {
+        // Does not save these users
         String result;
         // 1. Valid, changing capitalization
-        result = testUserName("newUser\n\n");
+        result = testUserNameValidity("newUser\n\n");
         assertEquals("newuser", result);
         // 2. Bogus characters removed
-        result = testUserName("{!1@2#3$a%b^c&*()}\n\n");
+        result = testUserNameValidity("{!1@2#3$a%b^c&*()}\n\n");
         assertEquals("123abc", result);
+        // 3. Exceeds max length - truncated
+        result = testUserNameValidity("123456789012345678901234567890thispartshouldbecutoff\n\n");
+        assertEquals("123456789012345678901234567890", result);
 
         // Prepare to redirect output
         OutputStream os = new ByteArrayOutputStream();
         PrintStream ps = new PrintStream(os);
         System.setOut(ps);
 
-        // 3. Give up
-        result = testUserName("!@#$%^&*()\n*&^%$#\n@\n#\n$\n%\n");
+        // 4. Give up after 3 tries
+        result = testUserNameValidity("!@#$%^&*()\n*&^%$#\n@\n#\n$\n%\n");
         // No username returned
         assertNull(result);
         // Shouldn't be more than three attempts
@@ -109,23 +117,23 @@ class UserTest {
         System.setOut(System.out);
     }
 
-    private String testUserName (String testString) {
+    private String testUserNameValidity (String testString) {
         System.setIn(new ByteArrayInputStream(testString.getBytes()));
         return User.getValidUserName(new Scanner(System.in));
     }
 
     @Test
     void testSaveAndLoad() {
-        User saveTest = new User("save", "Saved Test");
+        User saveTest = new User(User.TEST_USER, "Saved Test");
         Routine testRoutine = new Routine(TEST_ROUTINE);
         testRoutine.addTask(new TimedTask("Example", 30));
         saveTest.addRoutine(testRoutine);
         saveTest.save();
-        saveTest = new User("overwritten", "Should be overwritten");
+        saveTest = new User(User.TEST_USER + "overwritten", "Should be overwritten");
         assertEquals("Should be overwritten", saveTest.getName());
-        saveTest = User.load("save");
+        saveTest = User.load(User.TEST_USER);
         assertNotNull(saveTest);
-        assertEquals("save", saveTest.getUserName());
+        assertEquals(User.TEST_USER, saveTest.getUserName());
         assertEquals("Saved Test", saveTest.getName());
         assertEquals(1, saveTest.getMyRoutines().size());
     }
@@ -153,7 +161,7 @@ class UserTest {
         // 2. Select a valid routine
         result = testSelect(testUser,"1\n");
         assertNotNull(result);
-        assertEquals(TEST_ROUTINE, result.getTitle());
+        assertEquals(TEST_ROUTINE, result.getName());
         // For some reason this fails, even though it also reports
         // that the expected and actual are identical.
         // I think it has to do with line endings, but nothing I
@@ -181,8 +189,15 @@ class UserTest {
     }
 
     private Routine testSelect (User user, String testString) {
+        // In try/catch to simulate behavior of app
         System.setIn(new ByteArrayInputStream(testString.getBytes()));
-        return user.selectRoutine(new Scanner(System.in), "Select one:");
+        try {
+            return user.selectRoutine(new Scanner(System.in), "Select one:");
+        }
+        catch (InvalidSelectionException e) {
+            System.out.println(e.getMessage());
+            return null;
+        }
     }
 
     private OutputStream redirectOutput() {
