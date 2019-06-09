@@ -14,12 +14,10 @@ import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
-//import java.awt.event.ActionEvent;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.PrintWriter;
-import java.util.ArrayList;
 import java.util.Scanner;
 import java.util.stream.Stream;
 
@@ -39,6 +37,8 @@ public class RoutinesApp extends Application {
 
         window.setTitle("Routines!");
         window.setOnCloseRequest(e -> {
+            // "Consume" the default closing behavior so we can close (or not)
+            // on our own terms
             e.consume();
             closeProgram();
         });
@@ -67,24 +67,28 @@ public class RoutinesApp extends Application {
 
         Button signInButton = new Button();
         signInButton.setText("Go!");
-        signInButton.setOnAction(event -> {
-            String name = userNameTextField.getText().toLowerCase().replaceAll("[^a-z0-9]", "");
-            if (name.length() > 0) {
-                if (userFound(name)) {
-                    user = User.load(name);
-                    window.setScene(getMainScene());
-                } else {
-                    user = createNewUser(name);
-                    window.setScene(getNamePromptScene());
-                }
-            } else {
-                System.out.println("Not valid");
-            }
-        });
+        signInButton.setOnAction(event -> signInOnClick(userNameTextField));
+        signInButton.setOnKeyTyped(event -> signInOnClick(userNameTextField));
 
         loginLayout.add(signInButton, 0, 4);
 
         return new Scene(loginLayout, WIDTH, HEIGHT);
+    }
+
+    private void signInOnClick(TextField field) {
+        String name = field.getText().toLowerCase().replaceAll("[^a-z0-9]", "");
+        if (name.length() > 0) {
+            if (userFound(name)) {
+                user = User.load(name);
+                window.setScene(getMainScene());
+            } else {
+                user = createNewUser(name);
+                window.setScene(getNamePromptScene());
+            }
+        } else {
+            System.out.println("Not valid");
+        }
+
     }
 
     private Scene getNamePromptScene() {
@@ -96,13 +100,8 @@ public class RoutinesApp extends Application {
 
         Button newAccountButton = new Button();
         newAccountButton.setText("Sign up");
-        newAccountButton.setOnAction(event -> {
-            String name = displayNameTextField.getText().replaceAll("[^a-zA-Z0-9\']"," ");
-            user.setName( name.length() > 0 ? name : user.getUserName());
-            System.out.println("Saving user " + user.toString());
-            user.save();
-            window.setScene(getMainScene());
-        });
+        newAccountButton.setOnAction(e -> signUpOnClick(displayNameTextField));
+        newAccountButton.setOnKeyTyped(e -> signUpOnClick(displayNameTextField));
 
         namePromptLayout.add(newAccountButton, 0, 4);
 
@@ -110,24 +109,43 @@ public class RoutinesApp extends Application {
 
     }
 
+    private void signUpOnClick(TextField field) {
+        String name = field.getText().replaceAll("[^a-zA-Z0-9\']"," ");
+        user.setName( name.length() > 0 ? name : user.getUserName());
+        System.out.println("Saving user " + user.toString());
+        user.save();
+        window.setScene(getMainScene());
+    }
+
     private Scene getMainScene() {
         // The main menu
         final String[][] MENU_CHOICES = {
                 {"Add a routine", "add"},
                 {"Manage routines", "manage"},
-                {"Run a routine", "run"},
-                {"Quit", "quit"}
+//                {"Run a routine", "run"},
+//                {"Quit", "quit"}
         };
 
         VBox mainLayout = new VBox();
         mainLayout.setSpacing(10);
 
+        HBox menu = new HBox();
+        menu.setSpacing(10);
+        Stream.of(MENU_CHOICES)
+                .map(choice -> {
+                    Button button = new Button(choice[0]);
+                    button.setOnAction(e -> onMenu(choice[1], e));
+                    return button;
+                })
+                .forEach(button -> menu.getChildren().add(button));
+        mainLayout.getChildren().add(menu);
+
+        mainLayout.getChildren().add(new Text(user.getName() + "'s routines"));
         if (user != null) {
-            ArrayList myRoutines = user.getMyRoutines();
+            ObservableList<Routine> myRoutines = FXCollections.observableArrayList(user.getMyRoutines());
             if (myRoutines.size() > 0) {
-                Stream.of(myRoutines)
-                        .map(choice -> new Label(choice.toString()))
-                        .forEach(label -> mainLayout.getChildren().add(label));
+                ListView<Routine> routinesList = new ListView<>(myRoutines);
+                mainLayout.getChildren().add(routinesList);
             } else {
                 mainLayout.getChildren().add(new Text("No routines yet."));
             }
@@ -136,72 +154,31 @@ public class RoutinesApp extends Application {
             System.out.println("User was null");
         }
 
-        Stream.of(MENU_CHOICES)
-                .map(choice -> {
-                    Button b = new Button(choice[0]);
-                    b.setOnAction(e -> onMenu(choice[1], e));
-                    return b;
-                })
-                .forEach(button -> mainLayout.getChildren().add(button));
-
         return new Scene(mainLayout, WIDTH, HEIGHT);
     }
 
     private Scene getAddRoutineScene() {
+
         // Set up the tasks
         ObservableList<Task> myTasks = FXCollections.observableArrayList();
-        // Include a dummy task for now
-        myTasks.add(new UntimedTask("testing"));
 
         // The Add Routine page layout
         VBox addRoutineLayout = new VBox();
 
-        // First thing on the page is a grid for the routine name
+        // First thing on the page is a grid for the routine name field
         GridPane routineNameLayout = getAGridPane();
         final TextField routineNameTextField = new TextField();
         routineNameLayout.add(new Label("Enter the routine name:"), 0, 2);
         routineNameLayout.add(routineNameTextField, 1, 2);
-
-        final Button routineSaveButton = new Button();
-        routineSaveButton.setText("Save routine and tasks");
-        routineSaveButton.setOnAction(e -> {
-            String routineName = routineNameTextField.getText();
-            if (routineName.length() > 0 && myTasks.size() > 0) {
-                Routine newRoutine = new Routine(routineNameTextField.getText());
-                myTasks.forEach(task -> newRoutine.addTask(task));
-                user.addRoutine(newRoutine);
-                user.save();
-                window.setScene(getMainScene());
-            } else {
-                // TODO: required fields
-            }
-        });
-        routineNameLayout.add(routineSaveButton,0, 3);
-
         addRoutineLayout.getChildren().add(routineNameLayout);
 
         // Next up, a list of tasks
         addRoutineLayout.getChildren().add(new Text("Tasks:"));
-
         ListView<Task> listView = new ListView<>(myTasks);
         listView.setOnMouseClicked(e -> System.out.println("Mouse " + e));
         addRoutineLayout.getChildren().add(listView);
 
-//        myTasks.stream()
-//                .map(task -> {
-//                    HBox taskBox = new HBox();
-//                    Button b = new Button();
-//                    b.setText("edit");
-//                    b.setOnAction(e -> System.out.println("Update " + task.getName()));
-//                    taskBox.getChildren().addAll(
-//                            new Text(task.getName().concat("\t")),
-//                            new Text(task.getTimeForDisplay()),
-//                            b
-//                    );
-//                    return taskBox;
-//                })
-//                .forEach(box -> addRoutineLayout.getChildren().add(box));
-
+        // Another grid, for the task name and length fields
         GridPane newTaskLayout = getAGridPane();
 
         final TextField addTaskNameTextField = new TextField();
@@ -212,32 +189,47 @@ public class RoutinesApp extends Application {
         newTaskLayout.add(new Label("Task Length"), 0, 3);
         newTaskLayout.add(addTaskLengthTextField, 1, 3);
 
+        // A "Save task" button
         final Button saveTaskButton = new Button("Save Task");
         saveTaskButton.setOnAction(e -> {
             String taskName = addTaskNameTextField.getText();
-            int length;
-            Task newTask;
+            int taskLength;
             try {
-                length = Integer.parseInt(addTaskLengthTextField.getText());
+                taskLength = Integer.parseInt(addTaskLengthTextField.getText());
+            } catch (NumberFormatException exception) {
+                taskLength = 0;
             }
-            catch (NumberFormatException exception) {
-                length = 0;
-            }
-            if (length > 0) {
-                newTask = new TimedTask(taskName, length);
-            } else {
-                newTask = new UntimedTask(taskName);
-            }
-            System.out.println("Adding " + newTask.toString());
-            myTasks.add(newTask);
+            addTaskNameTextField.clear();
+            addTaskLengthTextField.clear();
+            myTasks.add(taskLength > 0 ? new TimedTask(taskName, taskLength) : new UntimedTask(taskName));
             addRoutineLayout.getChildren().remove(newTaskLayout);
         });
         newTaskLayout.add(saveTaskButton, 0, 4);
 
+        // An add task button, to make the task name/length fields appear
         final Button addTaskButton = new Button("Add New Task");
-        addTaskButton.setOnAction(e -> addRoutineLayout.getChildren().add(newTaskLayout));
+        addTaskButton.setOnAction(e -> {
+            addRoutineLayout.getChildren().add(newTaskLayout);
+//            addRoutineLayout.getChildren().remove(addTaskButton);
+        });
 
-        addRoutineLayout.getChildren().add(addTaskButton);
+        // A save button for saving the routine and its tasks
+        final Button saveRoutineButton = new Button();
+        saveRoutineButton.setText("Save routine and tasks");
+        saveRoutineButton.setOnAction(e -> {
+            String routineName = routineNameTextField.getText();
+            if (routineName.length() > 0 && myTasks.size() > 0) {
+                Routine newRoutine = new Routine(routineNameTextField.getText());
+                myTasks.forEach(newRoutine::addTask);
+                user.addRoutine(newRoutine);
+                user.save();
+                window.setScene(getMainScene());
+            } else {
+                System.out.println("Required fields");
+            }
+        });
+
+        addRoutineLayout.getChildren().addAll(addTaskButton, saveRoutineButton);
 
         return new Scene(addRoutineLayout, WIDTH, HEIGHT);
 

@@ -79,6 +79,11 @@ class Routine implements Selectable, Serializable {
         tasks.remove(i);
     }
 
+    @Override
+    public String toString() {
+        return this.getTitle();
+    }
+
     /**
      * Displays a routine and lists out the current tasks and their times, in order.
      */
