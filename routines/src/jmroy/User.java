@@ -27,6 +27,8 @@ class User implements Serializable {
             + System.getProperty("file.separator");
     static final String USERS_FILE = FILE_DIR + "ALL_USERS";
 
+    private Theme themePreference = Theme.LIGHT;
+
     // Constructors
     
     private User()
@@ -45,23 +47,6 @@ class User implements Serializable {
     }
 
     // Class Methods
-
-    /**
-     * Determines if the input is a valid username or not
-     * Does not change the input - does not change case or remove characters
-     * @param input A string with the user's input
-     * @return true if the input is a valid username, false otherwise
-     */
-    static boolean isValidUserName(String input) {
-        final int MAX_USERNAME_LENGTH = 30;
-        if (input.length() < 1 ||
-                input.length() > MAX_USERNAME_LENGTH ||
-                input.startsWith(TEST_USER)) {
-            return false;
-        } else {
-            return true;
-        }
-    }
 
     /**
      * Prompts the user for a username, cleans the input up a bit
@@ -107,10 +92,6 @@ class User implements Serializable {
     ArrayList<Routine> getMyRoutines()
     {
         return myRoutines;
-    }
-
-    void setMyRoutines(ArrayList<Routine> routines) {
-        this.myRoutines = routines;
     }
 
     void addRoutine(Routine routine)
@@ -224,6 +205,14 @@ class User implements Serializable {
                 Routine.SINGULAR,
                 Routine.PLURAL);
         return getRoutineByIndex(selection);
+    }
+
+    public Theme getThemePreference() {
+        return themePreference;
+    }
+
+    public void setThemePreference(Theme themePreference) {
+        this.themePreference = themePreference;
     }
 
 }

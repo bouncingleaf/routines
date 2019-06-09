@@ -3,7 +3,6 @@ package jmroy;
 import javafx.application.Application;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.event.ActionEvent;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -55,20 +54,32 @@ public class RoutinesApp extends Application {
         return pane;
     }
 
+    private Button getAButton(String text) {
+        Button button = new Button(text);
+        button.setStyle(
+                "-fx-background-color: darkslateblue; -fx-text-fill: white;"
+        );
+        return button;
+    }
+
+    private Button getExitButton(String text) {
+        Button exitButton = getAButton(text == null ? "Exit" : text);
+        exitButton.setOnAction(e -> window.setScene(getMainScene()));
+        return exitButton;
+    }
+
     private Scene getLoginScene() {
         GridPane loginLayout = getAGridPane();
 
         loginLayout.add(new Text("Welcome to the Routines app!"),0, 0, 2, 1);
-        loginLayout.add(new Text("Enter your username and sign in, or sign up as a new user:"),0, 1, 2, 1);
+        loginLayout.add(new Text("Sign in, or sign up as a new user:"),0, 1, 2, 1);
 
         TextField userNameTextField = new TextField();
         loginLayout.add(new Label("User name:"), 0, 2);
         loginLayout.add(userNameTextField, 1, 2);
 
-        Button signInButton = new Button();
-        signInButton.setText("Go!");
+        Button signInButton = getAButton("Go!");
         signInButton.setOnAction(event -> signInOnClick(userNameTextField));
-        signInButton.setOnKeyTyped(event -> signInOnClick(userNameTextField));
 
         loginLayout.add(signInButton, 0, 4);
 
@@ -98,10 +109,8 @@ public class RoutinesApp extends Application {
         namePromptLayout.add(new Label("Enter your name (optional):"), 0, 2);
         namePromptLayout.add(displayNameTextField, 1, 2);
 
-        Button newAccountButton = new Button();
-        newAccountButton.setText("Sign up");
+        Button newAccountButton = getAButton("Sign up");
         newAccountButton.setOnAction(e -> signUpOnClick(displayNameTextField));
-        newAccountButton.setOnKeyTyped(e -> signUpOnClick(displayNameTextField));
 
         namePromptLayout.add(newAccountButton, 0, 4);
 
@@ -122,8 +131,7 @@ public class RoutinesApp extends Application {
         final String[][] MENU_CHOICES = {
                 {"Add a routine", "add"},
                 {"Manage routines", "manage"},
-//                {"Run a routine", "run"},
-//                {"Quit", "quit"}
+                {"Preferences", "prefs"}
         };
 
         VBox mainLayout = new VBox();
@@ -133,8 +141,8 @@ public class RoutinesApp extends Application {
         menu.setSpacing(10);
         Stream.of(MENU_CHOICES)
                 .map(choice -> {
-                    Button button = new Button(choice[0]);
-                    button.setOnAction(e -> onMenu(choice[1], e));
+                    Button button = getAButton(choice[0]);
+                    button.setOnAction(e -> handleChoice(choice[1]));
                     return button;
                 })
                 .forEach(button -> menu.getChildren().add(button));
@@ -145,6 +153,10 @@ public class RoutinesApp extends Application {
             ObservableList<Routine> myRoutines = FXCollections.observableArrayList(user.getMyRoutines());
             if (myRoutines.size() > 0) {
                 ListView<Routine> routinesList = new ListView<>(myRoutines);
+                routinesList.setOnMouseClicked(e -> {
+                    Routine selected = routinesList.getSelectionModel().getSelectedItem();
+                    window.setScene(getRunRoutineScene(selected));
+                });
                 mainLayout.getChildren().add(routinesList);
             } else {
                 mainLayout.getChildren().add(new Text("No routines yet."));
@@ -154,10 +166,18 @@ public class RoutinesApp extends Application {
             System.out.println("User was null");
         }
 
-        return new Scene(mainLayout, WIDTH, HEIGHT);
+        Scene scene = new Scene(mainLayout, WIDTH, HEIGHT);
+        scene.getStylesheets().add(user.getThemePreference().getFilename());
+        return scene;
     }
 
     private Scene getAddRoutineScene() {
+        final int LABEL_COL = 0;
+        final int FIELD_COL = 1;
+        final int ROUTINE_NAME_ROW = 2;
+        final int TASK_NAME_ROW = 4;
+        final int TASK_LENGTH_ROW = 5;
+        final int SAVE_TASK_BUTTON_ROW = 6;
 
         // Set up the tasks
         ObservableList<Task> myTasks = FXCollections.observableArrayList();
@@ -165,57 +185,43 @@ public class RoutinesApp extends Application {
         // The Add Routine page layout
         VBox addRoutineLayout = new VBox();
 
-        // First thing on the page is a grid for the routine name field
-        GridPane routineNameLayout = getAGridPane();
+        // First thing on the page is a grid for the input fields
+        GridPane inputFieldsGrid = getAGridPane();
         final TextField routineNameTextField = new TextField();
-        routineNameLayout.add(new Label("Enter the routine name:"), 0, 2);
-        routineNameLayout.add(routineNameTextField, 1, 2);
-        addRoutineLayout.getChildren().add(routineNameLayout);
-
-        // Next up, a list of tasks
-        addRoutineLayout.getChildren().add(new Text("Tasks:"));
-        ListView<Task> listView = new ListView<>(myTasks);
-        listView.setOnMouseClicked(e -> System.out.println("Mouse " + e));
-        addRoutineLayout.getChildren().add(listView);
-
-        // Another grid, for the task name and length fields
-        GridPane newTaskLayout = getAGridPane();
+        inputFieldsGrid.add(new Label("Enter the routine name:"), LABEL_COL, ROUTINE_NAME_ROW);
+        inputFieldsGrid.add(routineNameTextField, FIELD_COL, ROUTINE_NAME_ROW);
 
         final TextField addTaskNameTextField = new TextField();
-        newTaskLayout.add(new Label("Task Name"), 0, 2);
-        newTaskLayout.add(addTaskNameTextField, 1, 2);
+        inputFieldsGrid.add(new Label("Task Name"), LABEL_COL, TASK_NAME_ROW);
+        inputFieldsGrid.add(addTaskNameTextField, FIELD_COL, TASK_NAME_ROW);
 
         final TextField addTaskLengthTextField = new TextField();
-        newTaskLayout.add(new Label("Task Length"), 0, 3);
-        newTaskLayout.add(addTaskLengthTextField, 1, 3);
+        inputFieldsGrid.add(new Label("Task Length (minutes)"), LABEL_COL, TASK_LENGTH_ROW);
+        inputFieldsGrid.add(addTaskLengthTextField, FIELD_COL, TASK_LENGTH_ROW);
 
         // A "Save task" button
-        final Button saveTaskButton = new Button("Save Task");
+        final Button saveTaskButton = getAButton("Save Task");
         saveTaskButton.setOnAction(e -> {
             String taskName = addTaskNameTextField.getText();
             int taskLength;
-            try {
-                taskLength = Integer.parseInt(addTaskLengthTextField.getText());
-            } catch (NumberFormatException exception) {
-                taskLength = 0;
+            if (taskName.length() > 0) {
+                try {
+                    taskLength = Integer.parseInt(addTaskLengthTextField.getText());
+                } catch (NumberFormatException exception) {
+                    taskLength = 0;
+                }
+                addTaskNameTextField.clear();
+                addTaskLengthTextField.clear();
+                myTasks.add(taskLength > 0 ? new TimedTask(taskName, taskLength) : new UntimedTask(taskName));
             }
-            addTaskNameTextField.clear();
-            addTaskLengthTextField.clear();
-            myTasks.add(taskLength > 0 ? new TimedTask(taskName, taskLength) : new UntimedTask(taskName));
-            addRoutineLayout.getChildren().remove(newTaskLayout);
         });
-        newTaskLayout.add(saveTaskButton, 0, 4);
+        inputFieldsGrid.add(saveTaskButton, LABEL_COL, SAVE_TASK_BUTTON_ROW);
 
-        // An add task button, to make the task name/length fields appear
-        final Button addTaskButton = new Button("Add New Task");
-        addTaskButton.setOnAction(e -> {
-            addRoutineLayout.getChildren().add(newTaskLayout);
-//            addRoutineLayout.getChildren().remove(addTaskButton);
-        });
+        // Next up, a list of tasks
+        ListView<Task> tasksList = new ListView<>(myTasks);
 
         // A save button for saving the routine and its tasks
-        final Button saveRoutineButton = new Button();
-        saveRoutineButton.setText("Save routine and tasks");
+        final Button saveRoutineButton = getAButton("Save routine and tasks");
         saveRoutineButton.setOnAction(e -> {
             String routineName = routineNameTextField.getText();
             if (routineName.length() > 0 && myTasks.size() > 0) {
@@ -225,16 +231,69 @@ public class RoutinesApp extends Application {
                 user.save();
                 window.setScene(getMainScene());
             } else {
-                System.out.println("Required fields");
+                System.out.println("Required fields not satisfied");
+                // Todo: check required fields
             }
         });
 
-        addRoutineLayout.getChildren().addAll(addTaskButton, saveRoutineButton);
+        addRoutineLayout.getChildren().addAll(
+                inputFieldsGrid,
+                new Text("Tasks:"),
+                tasksList,
+                saveRoutineButton);
 
-        return new Scene(addRoutineLayout, WIDTH, HEIGHT);
+        Scene scene = new Scene(addRoutineLayout, WIDTH, HEIGHT);
+        scene.getStylesheets().add(user.getThemePreference().getFilename());
+        return scene;
 
     }
 
+    /**
+     * Build the scene for managing routines
+     * @return The Scene for managing routines
+     */
+    private Scene getManageRoutinesScene() {
+        VBox manageLayout = new VBox();
+        manageLayout.getChildren().add(new Text("Manage routines - coming soon"));
+        manageLayout.getChildren().add(getExitButton("Exit Manage Routines"));
+        Scene scene = new Scene(manageLayout, WIDTH, HEIGHT);
+        scene.getStylesheets().add(user.getThemePreference().getFilename());
+        return scene;
+    }
+
+    private Scene getRunRoutineScene(Routine routineToRun) {
+        VBox runLayout = new VBox();
+        runLayout.getChildren().add(new Text("Real run routine - coming soon. For now, a simulation.\n"));
+        runLayout.getChildren().add(new Text("Running routine " + routineToRun.getTitle() + ":\n"));
+        routineToRun.getTasks().forEach(
+              task -> runLayout.getChildren().add(new Text (task.toString()))
+        );
+        runLayout.getChildren().add(getExitButton("Exit " + routineToRun.getTitle()));
+        Scene scene = new Scene(runLayout, WIDTH, HEIGHT);
+        scene.getStylesheets().add(user.getThemePreference().getFilename());
+        return scene;
+    }
+
+    /**
+     * Build the scene for managing user preferences
+     * @return The Scene for managing user preferences
+     */
+    private Scene getPreferencesScene() {
+        VBox prefsLayout = new VBox();
+        ChoiceBox cb = new ChoiceBox();
+        cb.getItems().addAll(Theme.LIGHT, Theme.DARK);
+        cb.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) ->
+        {
+            user.setThemePreference((Theme) newVal);
+        });
+        prefsLayout.getChildren().addAll(
+                new Text("Preferences"),
+                cb,
+                getExitButton("Exit Preferences"));
+        Scene scene = new Scene(prefsLayout, WIDTH, HEIGHT);
+        scene.getStylesheets().add(user.getThemePreference().getFilename());
+        return scene;
+    }
     /**
      * Get or create the User whose routines we want to work with
      * @param userName String of the user name to look for
@@ -280,23 +339,17 @@ public class RoutinesApp extends Application {
     /**
      * Process the user's menu choice
      * @param choice A string describing the user's choice
-     * @param event The event associated with the button click
      */
-    private void onMenu(String choice, ActionEvent event) {
+    private void handleChoice(String choice) {
         switch (choice) {
             case "add":
-                System.out.println("Add routines");
                 window.setScene(getAddRoutineScene());
                 break;
             case "manage":
-                System.out.println("Manage routines");
+                window.setScene(getManageRoutinesScene());
                 break;
-            case "run":
-                System.out.println("Run a routine");
-                break;
-            case "quit":
-                System.out.println("Exiting");
-                closeProgram();
+            case "prefs":
+                window.setScene(getPreferencesScene());
                 break;
             default:
                 // do nothing
@@ -310,184 +363,8 @@ public class RoutinesApp extends Application {
     }
 
     public static void main (String[] args) {
+
         launch(args);
     }
-
-//    private void addNewRoutine(ArrayList<Routine> myRoutines, Routine newRoutine) {
-//        if (myRoutines == null) {
-//            myRoutines = new ArrayList<>();
-//        }
-//        if (routineName.length() > 0 ) {
-//            Routine newRoutine = new Routine(routineName);
-//            if (newRoutine != null) {
-////               newRoutine.addTasksToRoutine(input);
-//                myRoutines.add(newRoutine);
-//                user.setMyRoutines(myRoutines);
-//                user.save();
-//            }
-//        }
-//    private static Routine createNewRoutine(Scanner input) {
-//        System.out.println("Enter the name of the routine (e.g. 'My morning routine'): ");
-//        String routineName = input.nextLine();
-//        if (routineName.length() > 0 ) {
-//            Routine newRoutine = new Routine(routineName);
-//            return newRoutine;
-//        } else {
-//            return null;
-//        }
-//    }
-
-    /**
-     * Prompts for a user's username, gets the input, looks up the user in the
-     * users file. If found, loads the user's data. If not found, starts a
-     * new user. Either way (unless there's an error or no username entered),
-     * establishes the User object, and greets the user.
-     * @param input Scanner for the user's input
-     * @return the selected User, or null if one is not selected
-     */
-/*
-    private static User getUser(Scanner input) {
-        // Get the user whose routines we want to work with
-        File usersFile = new File(User.USERS_FILE);
-        // Establish readers and writers to the users file, and go get the user
-        try (
-                Scanner userReader = usersFile.exists() ? new Scanner(usersFile) : null;
-                PrintWriter userWriter = new PrintWriter(new FileOutputStream(usersFile, true))
-        ) {
-            User newUser;
-            String userName = User.getValidUserName(input);
-            if (userName == null) {
-                return null;
-            }
-            // Look for the username in the users file
-            boolean found = false;
-            if (userReader != null) {
-                while (userReader.hasNextLine() && !found) {
-                    found = userReader.nextLine().equals(userName);
-                }
-            }
-
-            if (found) {
-                newUser = User.load(userName);
-            } else {
-                System.out.println("Greetings new user. Enter your name (optional): ");
-
-                // Not the best sanitizing but it'll do
-                String name = input.nextLine().replaceAll("[^a-zA-Z0-9\']"," ");
-                newUser = new User(userName, name);
-
-                // Save username to the users file
-                userWriter.println(newUser.getUserName());
-
-                // Initial save of user data
-                newUser.save();
-            }
-            return newUser;
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-            return null;
-        }
-
-    }
-*/
-
-//    /**
-//     * The main menu loop for the program. Displays the menu, gets the user's choice,
-//     * and handles the user's choice accordingly. Loop continues until the user
-//     * chooses to exit.
-//     * @param input Scanner for the user's input
-//     */
-//    private static void mainMenuLoop(Scanner input, User user) {
-//		// The main menu
-//		final String MENU =
-//                "\n1. Add a routine\n" +
-//                "2. Manage routines\n" +
-//                "3. Run a routine\n" +
-//            	"Anything else to quit.\n" +
-//                "Choice: ";
-//
-//		boolean done = false;
-//		int choice;
-//
-//		while (!done) {
-//			// Show the menu, list the user's routines below it
-//            System.out.println("\nHome\n");
-//            user.listRoutines();
-//			System.out.println(MENU);
-//
-//			// Get the user's choice
-//			try {
-//                String inputValue = input.nextLine();
-//                if (inputValue.length() == 0) {
-//                    done = true;
-//                } else if (inputValue.toLowerCase() == "m") {
-//                } else {
-//                    choice = Integer.parseInt(inputValue);
-//                    switch (choice) {
-//                        case 1:
-//                            Routine newRoutine = createNewRoutine(input);
-//                            if (newRoutine != null) {
-//                                newRoutine.addTasksToRoutine(input);
-//                                user.addRoutine(newRoutine);
-//                                user.save();
-//                            }
-//                            break;
-//                        case 2:
-//                            try {
-//                                user.selectRoutine(input, "Choose a routine to edit: ").edit(input);
-//                                user.save();
-//                            }
-//                            catch (InvalidSelectionException e) {
-//                                System.out.println(e.getMessage());
-//                            }
-//                            break;
-//                        case 3:
-//                            try {
-//                                user.selectRoutine(input, "Choose a routine to run: ").run();
-//                                user.save();
-//                            }
-//                            catch (InvalidSelectionException e) {
-//                                System.out.println(e.getMessage());
-//                            }
-//                            break;
-//                        default:
-//                            done = true;
-//                    }
-//                }
-//			} catch (NumberFormatException e) {
-//				// Exit for non-integer input
-//                done = true;
-//			}
-//		}
-//	}
-//
-//    /**
-//     * The main method of the program. Loops on displaying a menu and accepting and handling
-//     * a menu choice from the user, until the user chooses to quit the application.
-//     * @param args command line arguments, not expecting any
-//     */
-//    public static void main(String[] args) {
-//        // Scanner for getting user input
-//        Scanner input = new Scanner(System.in);
-//
-////        // Display an application title
-////        System.out.println("Routines!\n");
-//
-//        // Get the user
-//        User user = getUser(input);
-//
-//        if (user == null) {
-//            // Something went wrong
-//            System.out.println("Goodbye.");
-//        } else {
-//            // Display the menu, get the user's choice, handle it
-//            mainMenuLoop(input, user);
-//
-//            // The user has opted to quit. Close the input and say goodbye.
-//            System.out.printf("Done. See you next time, %s!\n\n", user.getName());
-//        }
-//        input.close();
-//        System.exit(0);
-//    }
 
 }

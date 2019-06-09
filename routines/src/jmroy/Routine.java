@@ -60,7 +60,7 @@ class Routine implements Selectable, Serializable {
         return tasks.get(i);
     }
 
-    private ArrayList<Task> getTasks() { return tasks; }
+    ArrayList<Task> getTasks() { return tasks; }
 
     /**
      * Get task description by task number (1, 2, 3...)
@@ -87,7 +87,7 @@ class Routine implements Selectable, Serializable {
     /**
      * Displays a routine and lists out the current tasks and their times, in order.
      */
-    public void display() {
+     void display() {
         System.out.printf("%s\n", this.getTitle());
         Task currentTask;
         // Print out the list of tasks and their times
@@ -120,7 +120,7 @@ class Routine implements Selectable, Serializable {
      * Precondition: Zero or more Tasks are added to the provided Routine
      * @param input The Scanner for getting user input
      */
-     void addTasksToRoutine(Scanner input) {
+     private void addTasksToRoutine(Scanner input) {
         String taskName = "ok";
         int taskLength;
         // Add tasks until the user stops adding
