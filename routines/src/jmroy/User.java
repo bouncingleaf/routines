@@ -45,6 +45,24 @@ class User implements Serializable {
     }
 
     // Class Methods
+
+    /**
+     * Determines if the input is a valid username or not
+     * Does not change the input - does not change case or remove characters
+     * @param input A string with the user's input
+     * @return true if the input is a valid username, false otherwise
+     */
+    static boolean isValidUserName(String input) {
+        final int MAX_USERNAME_LENGTH = 30;
+        if (input.length() < 1 ||
+                input.length() > MAX_USERNAME_LENGTH ||
+                input.startsWith(TEST_USER)) {
+            return false;
+        } else {
+            return true;
+        }
+    }
+
     /**
      * Prompts the user for a username, cleans the input up a bit
      * Limits the number of tries for the user (a way to exit)
@@ -91,6 +109,10 @@ class User implements Serializable {
         return myRoutines;
     }
 
+    void setMyRoutines(ArrayList<Routine> routines) {
+        this.myRoutines = routines;
+    }
+
     void addRoutine(Routine routine)
     {
         myRoutines.add(routine);
@@ -99,6 +121,10 @@ class User implements Serializable {
     String getName()
     {
         return name;
+    }
+
+    void setName(String name) {
+        this.name = name;
     }
 
     String getUserName()
@@ -153,6 +179,10 @@ class User implements Serializable {
         catch (InvalidClassException e) {
             // Users should not see this...
             System.out.println("Classes have changed, try clearing the files.");
+            return null;
+        }
+        catch (FileNotFoundException e) {
+            System.out.println("Uh oh, no file found for this user " + userName);
             return null;
         }
         catch (ClassNotFoundException | IOException e) {
