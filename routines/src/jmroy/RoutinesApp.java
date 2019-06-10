@@ -56,10 +56,14 @@ public class RoutinesApp extends Application {
 
     private Button getAButton(String text) {
         Button button = new Button(text);
-        button.setStyle(
-                "-fx-background-color: darkslateblue; -fx-text-fill: white;"
-        );
+        button.getStyleClass().add("button");
         return button;
+    }
+
+    private Label getLabel(String text) {
+        Label label = new Label(text);
+        label.getStyleClass().add("text");
+        return label;
     }
 
     private Button getExitButton(String text) {
@@ -71,8 +75,8 @@ public class RoutinesApp extends Application {
     private Scene getLoginScene() {
         GridPane loginLayout = getAGridPane();
 
-        loginLayout.add(new Text("Welcome to the Routines app!"),0, 0, 2, 1);
-        loginLayout.add(new Text("Sign in, or sign up as a new user:"),0, 1, 2, 1);
+        loginLayout.add(getLabel("Welcome to the Routines app!"),0, 0, 2, 1);
+        loginLayout.add(getLabel("Sign in, or sign up as a new user:"),0, 1, 2, 1);
 
         TextField userNameTextField = new TextField();
         loginLayout.add(new Label("User name:"), 0, 2);
@@ -148,7 +152,7 @@ public class RoutinesApp extends Application {
                 .forEach(button -> menu.getChildren().add(button));
         mainLayout.getChildren().add(menu);
 
-        mainLayout.getChildren().add(new Text(user.getName() + "'s routines"));
+        mainLayout.getChildren().add(getLabel(user.getName() + "'s routines"));
         if (user != null) {
             ObservableList<Routine> myRoutines = FXCollections.observableArrayList(user.getMyRoutines());
             if (myRoutines.size() > 0) {
@@ -159,7 +163,7 @@ public class RoutinesApp extends Application {
                 });
                 mainLayout.getChildren().add(routinesList);
             } else {
-                mainLayout.getChildren().add(new Text("No routines yet."));
+                mainLayout.getChildren().add(getLabel("No routines yet."));
             }
         } else {
             // Should never get here with normal operation
@@ -238,7 +242,7 @@ public class RoutinesApp extends Application {
 
         addRoutineLayout.getChildren().addAll(
                 inputFieldsGrid,
-                new Text("Tasks:"),
+                getLabel("Tasks:"),
                 tasksList,
                 saveRoutineButton);
 
@@ -254,7 +258,7 @@ public class RoutinesApp extends Application {
      */
     private Scene getManageRoutinesScene() {
         VBox manageLayout = new VBox();
-        manageLayout.getChildren().add(new Text("Manage routines - coming soon"));
+        manageLayout.getChildren().add(getLabel("Manage routines - coming soon"));
         manageLayout.getChildren().add(getExitButton("Exit Manage Routines"));
         Scene scene = new Scene(manageLayout, WIDTH, HEIGHT);
         scene.getStylesheets().add(user.getThemePreference().getFilename());
@@ -263,8 +267,8 @@ public class RoutinesApp extends Application {
 
     private Scene getRunRoutineScene(Routine routineToRun) {
         VBox runLayout = new VBox();
-        runLayout.getChildren().add(new Text("Real run routine - coming soon. For now, a simulation.\n"));
-        runLayout.getChildren().add(new Text("Running routine " + routineToRun.getTitle() + ":\n"));
+        runLayout.getChildren().add(getLabel("Real run routine - coming soon. For now, a simulation.\n"));
+        runLayout.getChildren().add(getLabel("Running routine " + routineToRun.getTitle() + ":\n"));
         routineToRun.getTasks().forEach(
               task -> runLayout.getChildren().add(new Text (task.toString()))
         );
@@ -280,14 +284,17 @@ public class RoutinesApp extends Application {
      */
     private Scene getPreferencesScene() {
         VBox prefsLayout = new VBox();
-        ChoiceBox cb = new ChoiceBox();
-        cb.getItems().addAll(Theme.LIGHT, Theme.DARK);
-        cb.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) ->
-        {
-            user.setThemePreference((Theme) newVal);
+        ChoiceBox<Theme> cb = new ChoiceBox<>();
+        cb.getItems().addAll(Theme.THEMES);
+        cb.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> {
+            user.setThemePreference(newVal);
+            if (window.getScene().getStylesheets().size() > 0 && oldVal != null) {
+                window.getScene().getStylesheets().remove(oldVal.getFilename());
+            }
+            window.getScene().getStylesheets().add(newVal.getFilename());
         });
         prefsLayout.getChildren().addAll(
-                new Text("Preferences"),
+                getLabel("Preferences"),
                 cb,
                 getExitButton("Exit Preferences"));
         Scene scene = new Scene(prefsLayout, WIDTH, HEIGHT);
