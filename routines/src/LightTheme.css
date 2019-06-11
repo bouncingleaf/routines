@@ -4,12 +4,19 @@
 
 .text {
     -fx-text-fill: #2c2c2c;
-    -fx-font-size: 16px;
+    -fx-font-size: 12pt;
 }
 
 .button {
-     -fx-background-color: #038c8c;
-     -fx-text-fill: white;
-     -fx-font-size: 16px;
+    -fx-background-color: #038c8c;
+    -fx-text-fill: white;
+    -fx-font-size: 12pt;
 }
 
+.list-view .list-cell:even {
+    -fx-background-color: #ededed;
+};
+
+.list-view .list-cell:odd {
+    -fx-background-color: #fdfdfd;
+};

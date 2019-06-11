@@ -1,24 +1,36 @@
 package jmroy;
 
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.scene.Scene;
+import javafx.scene.control.Button;
+import javafx.scene.control.ListView;
+import javafx.scene.control.TextField;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
+
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Scanner;
 
 /**
  * The Routine class: a Routine is a list of tasks, with a title.
  * @author Jessica Roy
  */
-class Routine implements Selectable, Serializable {
+class Routine implements Serializable {
 
-    // Class constants
-    static final String SINGULAR = "routine";
-    static final String PLURAL = "routines";
+    // Static variable
+    static private Task selectedTask;
+    static private Routine selectedRoutine;
+    static private TextField routineNameTextField;
+    static private TextField addTaskNameTextField;
+    static private TextField addTaskLengthTextField;
 
     // Instance variables
-    
+
     private String title = "My Routine";
     private ArrayList<Task> tasks;
-    
+
     // Constructors
     
     private Routine() {
@@ -30,18 +42,209 @@ class Routine implements Selectable, Serializable {
         this.title = title;
     }
 
+    // Class methods
+
+    static Scene addRoutineScene(Routine routine) {
+        selectedRoutine = routine;
+        selectedTask = null;
+        final int LABEL_COL = 0;
+        final int FIELD_COL = 1;
+        final int ROUTINE_NAME_ROW = 2;
+        final int TASK_NAME_ROW = 4;
+        final int TASK_LENGTH_ROW = 5;
+        final int SAVE_TASK_BUTTON_ROW = 6;
+
+        // Set up the tasks
+        ObservableList<Task> myTasks = routine == null ? FXCollections.observableArrayList() : FXCollections.observableArrayList(routine.getTasks());
+
+        // The Add Routine page layout
+        VBox addRoutineLayout = new VBox();
+
+        // First thing on the page is a grid for the input fields
+        GridPane inputFieldsGrid = Screen.getAGridPane();
+        routineNameTextField = routine == null ? new TextField() : new TextField(routine.getName());
+        addTaskNameTextField = selectedTask == null ? new TextField() : new TextField(selectedTask.getName());
+        // If the task is empty or untimed, leave the time blank
+        // Otherwise, it's a TimedTask, get the time in string form from the TimedTask
+        addTaskLengthTextField =
+                selectedTask == null || selectedTask instanceof UntimedTask ? new TextField() :
+                        new TextField(Integer.toString(((TimedTask) selectedTask).getMinutes()));
+
+        inputFieldsGrid.add(Screen.getLabel("Enter the routine name:"), LABEL_COL, ROUTINE_NAME_ROW);
+        inputFieldsGrid.add(routineNameTextField, FIELD_COL, ROUTINE_NAME_ROW);
+
+        inputFieldsGrid.add(Screen.getLabel("Task Name"), LABEL_COL, TASK_NAME_ROW);
+        inputFieldsGrid.add(addTaskNameTextField, FIELD_COL, TASK_NAME_ROW);
+
+        inputFieldsGrid.add(Screen.getLabel("Task Length (minutes)"), LABEL_COL, TASK_LENGTH_ROW);
+        inputFieldsGrid.add(addTaskLengthTextField, FIELD_COL, TASK_LENGTH_ROW);
+
+        // A "Save task" button
+        final Button saveTaskButton = Screen.getAButton("Save task");
+        saveTaskButton.setOnAction(e -> saveTask(myTasks));
+
+        // Clear input button
+        final Button clearTaskButton = Screen.getAButton("Clear");
+        clearTaskButton.setOnAction(e -> clearTask());
+
+        // Delete task button
+        final Button deleteTaskButton = Screen.getAButton("Delete task");
+        deleteTaskButton.setOnAction(e -> {
+            myTasks.remove(selectedTask);
+            clearTask();
+        });
+
+        HBox taskButtons = new HBox();
+        taskButtons.setSpacing(10);
+        taskButtons.getChildren().addAll(
+                saveTaskButton,
+                clearTaskButton,
+                deleteTaskButton
+        );
+        inputFieldsGrid.add(taskButtons, LABEL_COL, SAVE_TASK_BUTTON_ROW, 2, 1);
+
+        // Next up, a list of tasks, click to select one
+        ListView<Task> tasksList = new ListView<>(myTasks);
+        tasksList.setOnMouseClicked(e -> selectTask(tasksList, routine));
+
+        // A save button for saving the routine and its tasks
+        final Button saveRoutineButton = Screen.getAButton("Save routine and tasks");
+        saveRoutineButton.setOnAction(e -> {
+            saveAll(myTasks);
+            Screen.goToScreen(Screen.Pages.MAIN);
+        });
+
+        // An exit button, to exit without saving
+        final Button exitButton = Screen.getExitButton("Exit without saving");
+
+        HBox routineButtons = new HBox();
+        routineButtons.setSpacing(10);
+        routineButtons.getChildren().addAll(
+                saveRoutineButton,
+                exitButton
+        );
+
+        addRoutineLayout.getChildren().addAll(
+                inputFieldsGrid,
+                Screen.getLabel("Tasks (select one to edit it):"),
+                tasksList,
+                routineButtons);
+
+        return Screen.getAScene(addRoutineLayout);
+    }
+
+    private static void saveTask(ObservableList<Task> myTasks) {
+        String taskName = addTaskNameTextField.getText();
+        int taskLength;
+        if (taskName.length() > 0) {
+            try {
+                taskLength = Integer.parseInt(addTaskLengthTextField.getText());
+                // no negative task length
+                if (taskLength < 0) {
+                    taskLength = 0;
+                }
+            } catch (NumberFormatException exception) {
+                taskLength = 0;
+            }
+            Task newTask = taskLength > 0 ? new TimedTask(taskName, taskLength) : new UntimedTask(taskName);
+            if (selectedTask == null) {
+                myTasks.add(newTask);
+            } else {
+                myTasks.set(myTasks.indexOf(selectedTask), newTask);
+            }
+            clearTask();
+        }
+    }
+
+    private static void clearTask() {
+        addTaskLengthTextField.clear();
+        addTaskNameTextField.clear();
+        selectedTask = null;
+    }
+
+    private static void selectTask(ListView<Task> tasksList, Routine routine) {
+        selectedTask = tasksList.getSelectionModel().getSelectedItem();
+        routineNameTextField.setText(routine == null ? "" : routine.getName());
+        addTaskNameTextField.setText(selectedTask == null ? "" : selectedTask.getName());
+        // If the task is empty or untimed, leave the time blank
+        // Otherwise, it's a TimedTask, get the time in string form from the TimedTask
+        addTaskLengthTextField .setText(selectedTask == null || selectedTask instanceof UntimedTask ? "" :
+                Integer.toString(((TimedTask) selectedTask).getMinutes()));
+    }
+
+    private static void saveAll(ObservableList<Task> myTasks) {
+        User user = User.getSignedInUser();
+        String routineName = routineNameTextField.getText();
+        Routine newRoutine = new Routine(routineName.length() > 0 ? routineName : "My Routine");
+        myTasks.forEach(newRoutine::addTask);
+        if (selectedRoutine == null) {
+            user.addRoutine(newRoutine);
+        } else {
+            ArrayList<Routine> myRoutines = user.getMyRoutines();
+            myRoutines.set(myRoutines.indexOf(selectedRoutine),newRoutine);
+            user.setMyRoutines(myRoutines);
+        }
+        user.save();
+    }
+
+    /**
+     * Build the scene for managing routines
+     * @return The Scene for managing routines
+     */
+    static Scene manageRoutinesScene() {
+        VBox manageLayout = new VBox();
+        manageLayout.getChildren().addAll(
+                Screen.getLabel("Managing " + User.getSignedInUser().getName() + "'s routines"),
+                Screen.getLabel("Choose a routine to edit:")
+        );
+        if (User.getSignedInUser() != null) {
+            ObservableList<Routine> myRoutines = FXCollections.observableArrayList(User.getSignedInUser().getMyRoutines());
+            if (myRoutines.size() > 0) {
+                ListView<Routine> routinesList = new ListView<>(myRoutines);
+                routinesList.setOnMouseClicked(e -> {
+                    Routine selected = routinesList.getSelectionModel().getSelectedItem();
+                    Screen.getApplication().setScene(Routine.addRoutineScene(selected));
+                });
+                manageLayout.getChildren().add(routinesList);
+            } else {
+                manageLayout.getChildren().add(Screen.getLabel("No routines yet."));
+            }
+        } else {
+            // Should never get here with normal operation
+            System.out.println("User was null");
+        }
+
+        manageLayout.getChildren().add(Screen.getExitButton("Exit Manage Routines"));
+
+        return Screen.getAScene(manageLayout);
+    }
+
+    /**
+     * Get the scene to run a specified Routine
+     * @param routineToRun The Routine to be run
+     * @return the Scene that will run the routine
+     */
+    static Scene runRoutineScene(Routine routineToRun) {
+        VBox runLayout = new VBox();
+        runLayout.getChildren().addAll(
+                Screen.getLabel("Real run routine - coming soon. For now, a simulation.\n"),
+                Screen.getLabel("Running routine " + routineToRun.getTitle() + ":\n")
+        );
+        routineToRun.getTasks().forEach(
+                task -> runLayout.getChildren().add(Screen.getLabel(task.toString()))
+        );
+        runLayout.getChildren().add(Screen.getExitButton("Exit " + routineToRun.getTitle()));
+        return Screen.getAScene(runLayout);
+    }
+
+
     // Methods
 
-    // For Selectable interface
     public String getName() {
         return title;
     }
 
     String getTitle() { return title; }
-
-    void setTitle(String title) {
-        this.title = title;
-    }
 
     int numberOfTasks() {
         return this.tasks.size();
@@ -60,24 +263,7 @@ class Routine implements Selectable, Serializable {
         return tasks.get(i);
     }
 
-    ArrayList<Task> getTasks() { return tasks; }
-
-    /**
-     * Get task description by task number (1, 2, 3...)
-     * @param i The number of the task to get
-     * @return A string describing the task
-     */
-    String getTaskByIndex(int i) {
-        return tasks.get(i - 1).toString();
-    }
-    
-    private void setTask(int i, Task task) {
-        tasks.set(i, task);
-    }
-
-    private void deleteTask(int i) {
-        tasks.remove(i);
-    }
+    private ArrayList<Task> getTasks() { return tasks; }
 
     @Override
     public String toString() {
@@ -102,195 +288,5 @@ class Routine implements Selectable, Serializable {
         }
     }
 
-    /**
-     * Prompts the user for a new title for the routine and sets it
-     * @param input The Scanner for getting user input
-     */
-    private void changeRoutineName(Scanner input) {
-        System.out.printf("Rename routine \"%s\" to (enter to skip):\n", getTitle());
-        String newTitle = input.nextLine();
-        if (newTitle.length() > 0) {
-            setTitle(newTitle);
-        }
-    }
 
-    /**
-     * Prompts the user for the name and length of one or more tasks, adds the tasks to the
-     * specified Routine
-     * Precondition: Zero or more Tasks are added to the provided Routine
-     * @param input The Scanner for getting user input
-     */
-     private void addTasksToRoutine(Scanner input) {
-        String taskName = "ok";
-        int taskLength;
-        // Add tasks until the user stops adding
-        while (!taskName.equals("")) {
-            System.out.printf("\nName of task # %d (or enter, if done): \n", numberOfTasks() + 1);
-            taskName = input.nextLine();
-            if (taskName.length() > 0) {
-                System.out.println("Length of task (in minutes), or enter for untimed task: ");
-                try {
-                    taskLength = Integer.parseInt(input.nextLine());
-                }
-                catch (NumberFormatException e) {
-                    taskLength = 0;
-                }
-                Task newTask = taskLength > 0 ? new TimedTask(taskName, taskLength) : new UntimedTask(taskName);
-                addTask(newTask);
-                System.out.print("Added: ");
-                newTask.display();
-            }
-        }
-    }
-
-    /**
-     * Prompts the user to choose a task to edit.
-     * If one is chosen, allows the user to enter a new name and/or time.
-     * If none is chosen, displays a message.
-     * @param input The Scanner for getting user input
-     */
-    private void editModifyTask(Scanner input) {
-        try {
-            int taskIndex = selectTask(input, "Choose a task to edit");
-            Task taskToEdit = getTask(taskIndex);
-
-            // Prompt for the new name
-            System.out.printf("New name (enter to keep \"%s\"):\n", taskToEdit.getName());
-            String newName = input.nextLine();
-            if (newName.length() < 1) {
-                newName = taskToEdit.getName();
-            }
-
-            // Prompt for the new time
-            if (taskToEdit instanceof UntimedTask) {
-                System.out.println("New time, or enter to keep untimed:");
-            } else {
-                System.out.printf("New time, enter to keep %s, 0 for untimed:\n", taskToEdit.getTimeForDisplay());
-            }
-
-            // Get the new time, if any
-            try {
-                String inputValue = input.nextLine();
-                if (inputValue.length() == 0) {
-                    // No new time - just update the name
-                    taskToEdit.setName(newName);
-                } else {
-                    // New time was specified, set the new task
-                    int newTime = Integer.parseInt(inputValue);
-                    if (newTime > 0) {
-                        setTask(taskIndex, new TimedTask(newName, newTime));
-                    } else {
-                        setTask(taskIndex, new UntimedTask(newName));
-                    }
-                }
-            }
-            catch (Exception e) {
-                // No time changes if input not an integer
-                taskToEdit.setName(newName);
-            }
-        }
-        catch (InvalidSelectionException e) {
-            System.out.println(e.getMessage());
-        }
-    }
-
-    /**
-     * Prompts the user to choose a task to delete.
-     * If one is chosen, deletes the task and displays the info deleted.
-     * If none is chosen, displays a message.
-     * @param input The Scanner for getting user input
-     */
-    private void editDeleteTask(Scanner input) {
-        try {
-            int taskIndex = selectTask(input, "Choose a task to delete");
-            Task taskToDelete = getTask(taskIndex);
-            deleteTask(taskIndex);
-            System.out.printf("Deleted task %s\t%s\n", taskToDelete.getName(), taskToDelete.getTimeForDisplay());
-        }
-        catch (InvalidSelectionException e) {
-            System.out.println(e.getMessage());
-        }
-    }
-
-    /**
-     * Selects a task from the routine's list of tasks
-     * @param input Scanner for user input
-     * @param message Message to display before selection is made
-     * @return index of selected task, if one is selected
-     * @throws InvalidSelectionException if no valid selection is made
-     */
-    private Integer selectTask(Scanner input, String message) throws InvalidSelectionException {
-        return new Selection<Task>().selectItem(input, getTasks(), message, Task.SINGULAR, Task.PLURAL);
-    }
-
-    /**
-     * Displays the edit menu, gets the user's choice, and switches
-     * to the correct routine to handle the choice.
-     */
-    void edit(Scanner editInput) {
-        final String EDIT_MENU =
-                        "1. Change the routine name\n" +
-                        "2. Add a task\n" +
-                        "3. Edit a task\n" +
-                        "4. Delete a task\n" +
-                        "Anything else when done.\n" +
-                        "Choice: ";
-        boolean done = false;
-        int choice;
-
-        while (!done) {
-            // Show the menu
-            System.out.print("\nManage Routine: ");
-            this.display();
-            System.out.println(EDIT_MENU);
-
-            // Get the user's choice
-            try {
-                choice = Integer.parseInt(editInput.nextLine());
-                switch (choice) {
-                    case 1:
-                        changeRoutineName(editInput);
-                        break;
-                    case 2:
-                        addTasksToRoutine(editInput);
-                        break;
-                    case 3:
-                        editModifyTask(editInput);
-                        break;
-                    case 4:
-                        editDeleteTask(editInput);
-                        break;
-                    default:
-                        done = true;
-                }
-            } catch (NumberFormatException e) {
-                // Exit for non-integer input
-                done = true;
-            }
-        }
-     }
-
-    /**
-     * For now, a simulation of running the routine
-     */
-    void run() {
-        System.out.printf("Simulation of running %s routine...\n", this.getTitle());
-        Task currentTask;
-        for (int i = 0; i < numberOfTasks(); i++) {
-            currentTask = getTask(i);
-            System.out.println();
-            currentTask.display();
-            if (currentTask instanceof TimedTask) {
-                int count = 1;
-                for (int j = ((TimedTask) currentTask).getMinutes(); j > 0; j--) {
-                    System.out.printf("%02d:00", j);
-                    System.out.print(count++%10 == 0 ? "...\n" : "...");
-                }
-                System.out.println("Timer done");
-            } else {
-                System.out.println("Untimed!");
-            }
-        }
-        System.out.println("\nReal functionality coming soon");
-    }
 }

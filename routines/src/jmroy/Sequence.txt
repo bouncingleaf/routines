@@ -9,15 +9,19 @@
 '/
 
 activate RoutinesApp
-RoutinesApp->RoutinesApp:getValidUserName()
+RoutinesApp->Screen:setApplication()
+Screen->Login:getLoginScene()
+Login->User:signIn()
 alt not found in USERS file
-  RoutinesApp->User: create new user
+  Login->Login:getNamePromptScene()
+  Login->User:signUp()
   activate User
   User->Storage:save()
 else found in USERS file
-  RoutinesApp->Storage: User.load()
+  User->Storage: User.load()
   Storage-->User: user data
 end
+Login-->Screen:getMainScene()
 loop main
     RoutinesApp->User:listRoutines()
   alt choice 1 Add Routine

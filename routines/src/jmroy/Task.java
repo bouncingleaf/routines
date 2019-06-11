@@ -5,11 +5,7 @@ import java.io.Serializable;
 /**
  * @author Jessica Roy
  */
-abstract class Task implements Selectable, Serializable {
-
-    // Class variables
-    static final String SINGULAR = "task";
-    static final String PLURAL = "tasks";
+abstract class Task implements Serializable {
 
     // Instance variables
 

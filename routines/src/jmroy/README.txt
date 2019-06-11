@@ -15,19 +15,34 @@ Interacting with the application:
    converted to all lowercase, alphanumerics only. If you enter a name
    that has been used before, it will load the data; otherwise it will
    create a new user.
-2. You will be prompted for a name. If you don't enter one, the username
-   will be reused.
-3. The List, Edit, and Run options will display "No routines found" until
-   you enter at least one routine, so you may want to start with option 1.
-4. Enter an arbitrary string for the name of your routine.
-5. You can have a routine with no tasks, but that isn't very interesting,
+2. If you are creating a new user, you will be prompted for a name.
+   If you don't enter one, the username will be reused as your name.
+3. The home screen presents the options:
+     Add a routine
+     Manage routines
+     Preferences
+   ...followed by the list of routines if any.
+   If you click on a routine, it will "run".
+4. Running a routine:
+   For now this is a simulation.
+   Choose Exit to return to the main menu.
+5. Add a routine:
+   Enter an arbitrary string for the name of your routine.
+   You can have a routine with no tasks, but that isn't very interesting,
    so go ahead and enter a few tasks.
-6. When you're done entering tasks, just hit enter when it prompts you
-   for the name of the next task.
-7. Once you have a routine entered, you can view all the routines,
-   edit routines, or "run" a specific routine:
-   a) "view" will list all routines and their tasks
-   b) "edit" allows you to rename a routine, add tasks, edit tasks, or
-      delete tasks
-   c) "run" is a dummy for now
-8. Choose anything other than 1-4 at the main menu to exit.
+   When you're done entering tasks, Save the routine.
+6. Manage routines:
+   On this screen you can:
+     Rename a routine
+     Add tasks
+     Delete tasks (select one and choose Delete)
+     Edit tasks (select one, edit the info, choose Save)
+   You can save the routine, or discard changes
+7. Preferences:
+   The only preference currently available is the program color theme.
+   You can choose Light or Dark and it will save automatically for the user.
+   Sign out, sign back in - the theme should be retained.
+   Light is the default theme.
+
+
+

@@ -4,12 +4,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.util.ArrayList;
-import java.util.Scanner;
 
 class UserTest {
     private final String USER = "test";
@@ -83,46 +81,6 @@ class UserTest {
     }
 
     @Test
-    void testGetValidUserName() {
-        // Does not save these users
-        String result;
-        // 1. Valid, changing capitalization
-        result = testUserNameValidity("newUser\n\n");
-        assertEquals("newuser", result);
-        // 2. Bogus characters removed
-        result = testUserNameValidity("{!1@2#3$a%b^c&*()}\n\n");
-        assertEquals("123abc", result);
-        // 3. Exceeds max length - truncated
-        result = testUserNameValidity("123456789012345678901234567890thispartshouldbecutoff\n\n");
-        assertEquals("123456789012345678901234567890", result);
-
-        // Prepare to redirect output
-        OutputStream os = new ByteArrayOutputStream();
-        PrintStream ps = new PrintStream(os);
-        System.setOut(ps);
-
-        // 4. Give up after 3 tries
-        result = testUserNameValidity("!@#$%^&*()\n*&^%$#\n@\n#\n$\n%\n");
-        // No username returned
-        assertNull(result);
-        // Shouldn't be more than three attempts
-        assertEquals(
-                "Enter your username: \r\n" +
-                        "Enter your username: \r\n" +
-                        "Enter your username: \r\n",
-                os.toString());
-
-        //Restore normal input and output
-        System.setIn(System.in);
-        System.setOut(System.out);
-    }
-
-    private String testUserNameValidity (String testString) {
-        System.setIn(new ByteArrayInputStream(testString.getBytes()));
-        return User.getValidUserName(new Scanner(System.in));
-    }
-
-    @Test
     void testSaveAndLoad() {
         User saveTest = new User(User.TEST_USER, "Saved Test");
         Routine testRoutine = new Routine(TEST_ROUTINE);
@@ -136,68 +94,6 @@ class UserTest {
         assertEquals(User.TEST_USER, saveTest.getUserName());
         assertEquals("Saved Test", saveTest.getName());
         assertEquals(1, saveTest.getMyRoutines().size());
-    }
-
-    @Test
-    void testSelectRoutine() {
-        Routine result;
-        OutputStream os = redirectOutput();
-        String expected;
-
-        // 1. Try to select with no routines
-        testUser.deleteRoutines();
-        result = testSelect(testUser,"\n");
-        assertNull(result);
-        expected = "No routines found.\r\n";
-        assertEquals(expected, os.toString());
-
-        // Add a routine
-        Routine testRoutine = new Routine(TEST_ROUTINE);
-        testUser.addRoutine(testRoutine);
-        // Confirm that one was added
-        assertEquals(1, testUser.getMyRoutines().size());
-        assertEquals(expected, os.toString());
-
-        // 2. Select a valid routine
-        result = testSelect(testUser,"1\n");
-        assertNotNull(result);
-        assertEquals(TEST_ROUTINE, result.getName());
-        // For some reason this fails, even though it also reports
-        // that the expected and actual are identical.
-        // I think it has to do with line endings, but nothing I
-        // do makes it better...
-//        expected += "1. Test Routine\nSelect one:\n";
-//        assertEquals(expected, os.toString());
-
-        // 3. Select a valid integer but bogus routine
-        result = testSelect(testUser,"9999\n");
-        assertNull(result);
-//        expected += "1. " + TEST_ROUTINE + "\nSelect one:\n";
-//        expected += "Not a valid routine.\r\n";
-//        assertEquals(expected, os.toString());
-
-        // 4. Select a non-integer bogus routine
-        result = testSelect(testUser,"abc\n");
-        assertNull(result);
-//        expected += "1. " + TEST_ROUTINE + "\nSelect one:\n";
-//        expected += "Not a valid routine.\r\n";
-//        assertEquals(expected, os.toString());
-
-        // Restore normal input and output
-        System.setIn(System.in);
-        System.setOut(System.out);
-    }
-
-    private Routine testSelect (User user, String testString) {
-        // In try/catch to simulate behavior of app
-        System.setIn(new ByteArrayInputStream(testString.getBytes()));
-        try {
-            return user.selectRoutine(new Scanner(System.in), "Select one:");
-        }
-        catch (InvalidSelectionException e) {
-            System.out.println(e.getMessage());
-            return null;
-        }
     }
 
     private OutputStream redirectOutput() {

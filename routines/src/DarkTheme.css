@@ -1,14 +1,24 @@
 .root {
-    -fx-background-color: #2c2c2c;
+    -fx-background-color: #3e3e3e;
 }
 
 .text {
     -fx-text-fill: #ececec;
-    -fx-font-size: 16px;
+    -fx-font-size: 12pt;
 }
 
 .button {
     -fx-background-color: #8dabf3;
     -fx-text-fill: black;
-    -fx-font-size: 16px;
+    -fx-font-size: 12pt;
+};
+
+.list-view .list-cell:even {
+    -fx-background-color: #2d2d2d;
+    -fx-text-fill: #ececec;
+};
+
+.list-view .list-cell:odd {
+    -fx-background-color: #0d0d0d;
+    -fx-text-fill: #ececec;
 };

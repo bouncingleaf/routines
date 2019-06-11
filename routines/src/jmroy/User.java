@@ -11,23 +11,24 @@ import java.util.Scanner;
  */
 class User implements Serializable {
 
-    // Class constant
+    // Class variables and constants
+    private static User signedInUser;
+    private static final String FILE_DIR = System.getProperty("user.dir")
+            + System.getProperty("file.separator")
+            + "files"
+            + System.getProperty("file.separator");
 
+    private static final String USERS_FILE = FILE_DIR + "ALL_USERS";
     // Usernames may not begin with this string - reserved for unit testing
     static final String TEST_USER = "junittest";
+
 
     // Instance variables
 
     private ArrayList<Routine> myRoutines;
     private String name;
     private String userName;
-    private static final String FILE_DIR = System.getProperty("user.dir")
-            + System.getProperty("file.separator")
-            + "files"
-            + System.getProperty("file.separator");
-    static final String USERS_FILE = FILE_DIR + "ALL_USERS";
-
-    private Theme themePreference = Theme.LIGHT;
+    private Theme themePreference = Theme.DEFAULT;
 
     // Constructors
     
@@ -48,40 +49,109 @@ class User implements Serializable {
 
     // Class Methods
 
-    /**
-     * Prompts the user for a username, cleans the input up a bit
-     * Limits the number of tries for the user (a way to exit)
-     * Does not save the user or look for saved users
-     * @param input Scanner for user's input
-     * @return String with the user's name, or null
-     */
-    static String getValidUserName(Scanner input) {
-        final int MAX_USERNAME_LENGTH = 30;
-        final int MAX_TRIES = 3;
+    private static void setSignedInUser(User user) {
+        signedInUser = user;
+    }
+    static User getSignedInUser() {
+        return signedInUser;
+    }
 
-        // Get the username and clean it up a bit
-        // User has 3 tries to enter a username
-        String userName = "";
-        int tries = 0;
-        while (userName.length() < 1 && tries++ < MAX_TRIES) {
-            System.out.println("Enter your username: ");
-            // Force lowercase, only alphanumeric, less than MAX_USERNAME_LENGTH characters
-            userName = input.nextLine()
-                    .toLowerCase()
-                    .replaceAll("[^a-z0-9]", "");
-            userName = userName.length() < MAX_USERNAME_LENGTH ? userName : userName.substring(0, MAX_USERNAME_LENGTH);
-            if (userName.startsWith(TEST_USER)) {
-                System.out.printf("Sorry, %s is a reserved name\n", userName);
-                userName = "";
-            }
-        }
+    private static User createNewUser(String userName) {
+        File usersFile = new File(User.USERS_FILE);
+        try (
+                PrintWriter userWriter = new PrintWriter(new FileOutputStream(usersFile, true))
+        ) {
+            User newUser = new User(userName);
 
-        // If they still haven't entered anything valid, exit
-        if (userName.length() < 1) {
+            // Save username to the users file
+            userWriter.println(newUser.getUserName());
+
+            return newUser;
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
             return null;
         }
-        return userName;
     }
+
+    static Screen.Pages signIn(String nameInput) {
+        String name = nameInput.toLowerCase().replaceAll("[^a-z0-9]", "");
+        if (name.length() > 0) {
+            if (userFound(name)) {
+                setSignedInUser(User.load(name));
+                return Screen.Pages.MAIN;
+            } else {
+                setSignedInUser(User.createNewUser(name));
+                return Screen.Pages.NAME;
+            }
+        } else {
+            System.out.println("Sign in not valid");
+            return Screen.Pages.ERROR;
+        }
+    }
+
+    static void signUp(String nameInput) {
+        String name = nameInput.replaceAll("[^a-zA-Z0-9\']"," ");
+        getSignedInUser().setName( name.length() > 0 ? name : User.getSignedInUser().getUserName());
+        getSignedInUser().save();
+    }
+
+
+    /**
+     * Get or create the User whose routines we want to work with
+     * @param userName String of the user name to look for
+     * @return true if the user is found, false if not
+     */
+    private static boolean userFound(String userName) {
+        // Open the users file, establish a reader, and get the user
+        File usersFile = new File(User.USERS_FILE);
+        try (
+                Scanner userReader = usersFile.exists() ? new Scanner(usersFile) : null
+        ) {
+            boolean found = false;
+            // If we have a username, look for it in the users file
+            if (userName != null && userReader != null) {
+                while (userReader.hasNextLine() && !found) {
+                    found = userReader.nextLine().equals(userName);
+                }
+            }
+            return found;
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    /**
+     * Loads a User object by reading and deserializing it from a user data file.
+     * @param userName The userName of the User to load.
+     * @return The User object loaded from the file.
+     */
+    static User load (String userName) {
+        final String USER_FILE = FILE_DIR + "USER_" + userName;
+        try (FileInputStream fileInputStream = new FileInputStream(USER_FILE)) {
+            ObjectInputStream objectInputStream = new ObjectInputStream((fileInputStream));
+            return (User) objectInputStream.readObject();
+        }
+        catch (InvalidClassException e) {
+            // Users should not see this...
+            System.out.println("Classes have changed, try clearing the files.");
+            return null;
+        }
+        catch (FileNotFoundException e) {
+            System.out.println("Uh oh, no file found for this user " + userName);
+            return null;
+        }
+        catch (ClassNotFoundException | IOException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    static String getStylesheet() {
+        return getSignedInUser() == null ? Theme.DEFAULT.getFilename() :
+                getSignedInUser().getThemePreference().getFilename();
+    }
+
 
     // Instance Methods
 
@@ -92,6 +162,10 @@ class User implements Serializable {
     ArrayList<Routine> getMyRoutines()
     {
         return myRoutines;
+    }
+
+    void setMyRoutines(ArrayList<Routine> myRoutines) {
+        this.myRoutines = myRoutines;
     }
 
     void addRoutine(Routine routine)
@@ -112,8 +186,6 @@ class User implements Serializable {
     {
         return userName;
     }
-
-    private Routine getRoutineByIndex(int i) { return this.myRoutines.get(i); }
 
     /**
      * Deletes ALL routines for the user, in memory.
@@ -147,32 +219,6 @@ class User implements Serializable {
     }
 
     /**
-     * Loads a User object by reading and deserializing it from a user data file.
-     * @param userName The userName of the User to load.
-     * @return The User object loaded from the file.
-     */
-    static User load (String userName) {
-        final String USER_FILE = FILE_DIR + "USER_" + userName;
-        try (FileInputStream fileInputStream = new FileInputStream(USER_FILE)) {
-            ObjectInputStream objectInputStream = new ObjectInputStream((fileInputStream));
-            return (User) objectInputStream.readObject();
-        }
-        catch (InvalidClassException e) {
-            // Users should not see this...
-            System.out.println("Classes have changed, try clearing the files.");
-            return null;
-        }
-        catch (FileNotFoundException e) {
-            System.out.println("Uh oh, no file found for this user " + userName);
-            return null;
-        }
-        catch (ClassNotFoundException | IOException e) {
-            e.printStackTrace();
-            return null;
-        }
-    }
-
-    /**
      * Serializes the User object and saves the data to a file specific to that user.
      */
     void save () {
@@ -189,29 +235,11 @@ class User implements Serializable {
         }
     }
 
-    /**
-     * Displays a list of routines for the user and prompts for a selection.
-     *
-     * @param input Scanner for user input
-     * @param message Message to display before selection is made
-     * @return a Routine, if one is selected
-     * @throws InvalidSelectionException if no valid selection is made
-     */
-    Routine selectRoutine(Scanner input, String message) throws InvalidSelectionException {
-        int selection = new Selection<Routine>().selectItem(
-                input,
-                getMyRoutines(),
-                message,
-                Routine.SINGULAR,
-                Routine.PLURAL);
-        return getRoutineByIndex(selection);
-    }
-
-    public Theme getThemePreference() {
+    private Theme getThemePreference() {
         return themePreference;
     }
 
-    public void setThemePreference(Theme themePreference) {
+    void setThemePreference(Theme themePreference) {
         this.themePreference = themePreference;
     }
 
