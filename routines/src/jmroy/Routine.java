@@ -254,39 +254,11 @@ class Routine implements Serializable {
         this.tasks.add(task);
     }
 
-    /**
-     * Get Task object by index number (0, 1, 2...)
-     * @param i The index of the task to get
-     * @return the Task at that index
-     */
-    private Task getTask(int i) {
-        return tasks.get(i);
-    }
-
     private ArrayList<Task> getTasks() { return tasks; }
 
     @Override
     public String toString() {
         return this.getTitle();
     }
-
-    /**
-     * Displays a routine and lists out the current tasks and their times, in order.
-     */
-     void display() {
-        System.out.printf("%s\n", this.getTitle());
-        Task currentTask;
-        // Print out the list of tasks and their times
-        for (int i = 0; i < numberOfTasks(); i++) {
-            currentTask = getTask(i);
-            System.out.printf(
-                "\t%d\t%s\t%s\n",
-                i + 1,
-                currentTask.getName(),
-                currentTask.getTimeForDisplay()
-            );
-        }
-    }
-
 
 }

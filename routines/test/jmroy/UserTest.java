@@ -4,10 +4,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
-import java.io.ByteArrayOutputStream;
-import java.io.OutputStream;
-import java.io.PrintStream;
 import java.util.ArrayList;
+import java.util.UUID;
 
 class UserTest {
     private final String USER = "test";
@@ -30,25 +28,11 @@ class UserTest {
         ArrayList<Routine> testList = testUser.getMyRoutines();
         assert(testList.isEmpty());
 
-        // Test listRoutines with no routines
-        OutputStream os = redirectOutput();
-        testUser.listRoutines();
-        String expected = "No routines yet for " + NAME + ".\n";
-        assertEquals(expected, os.toString());
-
         // Test adding a routine
         Routine testRoutine = new Routine(TEST_ROUTINE);
         testUser.addRoutine(testRoutine);
         // Confirm that one was added
         assertEquals(1, testUser.getMyRoutines().size());
-
-        // Test listRoutines with one routine
-        testUser.listRoutines();
-        expected += NAME + "'s routines:\n\t" + TEST_ROUTINE;
-        assertEquals(expected, os.toString());
-
-        // Restore normal output
-        System.setOut(System.out);
 
         // Now we KNOW test user has at least one routine
         // And we can do a valid test of deleteRoutines()
@@ -96,11 +80,36 @@ class UserTest {
         assertEquals(1, saveTest.getMyRoutines().size());
     }
 
-    private OutputStream redirectOutput() {
-        OutputStream os = new ByteArrayOutputStream();
-        PrintStream ps = new PrintStream(os);
-        System.setOut(ps);
-        return os;
+    @Test
+    void testThemePreference() {
+        User themeTest = new User(User.TEST_USER, "Theme Test");
+        themeTest.setThemePreference(Theme.DARK);
+        assertEquals(Theme.DARK, themeTest.getThemePreference());
+        themeTest.setThemePreference(Theme.LIGHT);
+        assertEquals(Theme.LIGHT, themeTest.getThemePreference());
     }
 
+    @Test
+    void testSignUpSignIn() {
+        String username = User.userNamePurify(User.TEST_USER + "SignInTest");
+        String name = "Signed Up";
+        Screen.Pages page = User.signIn(username);
+        assertNotNull(User.getSignedInUser());
+        assertEquals(username, User.getSignedInUser().getUserName());
+        if (page == Screen.Pages.NAME) {
+            User.signUp(name);
+        }
+        assertTrue(User.userFound(username));
+        assertEquals(username, User.getSignedInUser().getUserName());
+        assertEquals(name, User.getSignedInUser().getName());
+    }
+
+    @Test
+    void testCreateAndFound() {
+        String username = User.userNamePurify(User.TEST_USER + UUID.randomUUID());
+        User newUser = User.createNewUser(username);
+        assertNotNull(newUser);
+        assertEquals(username, newUser.getUserName());
+        assertTrue(User.userFound(username));
+    }
 }

@@ -10,67 +10,46 @@
 
 activate RoutinesApp
 RoutinesApp->Screen:setApplication()
+activate Screen
+RoutinesApp->Screen:goToScreen(LOGIN)
+activate Login
 Screen->Login:getLoginScene()
 Login->User:signIn()
+activate User
 alt not found in USERS file
   Login->Login:getNamePromptScene()
   Login->User:signUp()
-  activate User
   User->Storage:save()
 else found in USERS file
-  User->Storage: User.load()
+  User->Storage: User:load()
   Storage-->User: user data
 end
-Login-->Screen:getMainScene()
-loop main
-    RoutinesApp->User:listRoutines()
-  alt choice 1 Add Routine
-    RoutinesApp->User:addRoutine()
-    User->Routine:new
+Login->Screen:goToScreen(MAIN)
+activate MainScene
+Screen->MainScene:getMainScene()
+loop main:until exit
+  alt choice Add routine
+    MainScene->Screen:goToScreen(ADD)
+    Screen->Routine:addRoutineScene()
     activate Routine
-    loop addTasksToRoutine
-      Routine->Task:new
-      activate Task
-    end
+    Routine->Task:new
+    activate Task
+    Routine->User:addRoutine()
     User->Storage:save()
-  else choice 2 Manage Routines
-    RoutinesApp->User:selectRoutine()
-    User-->Selection:selectItem()
-    activate Selection
-    Selection->User:index of Routine
-    deactivate Selection
-    User->RoutinesApp:routineToEdit
-    RoutinesApp->Routine:routineToEdit.edit()
-    alt choice 1 Change Routine Name
-      Routine->Routine:changeRoutineName()
-    else choice 2 Add Tasks
-      loop addTasksToRoutine
-         Routine->Task:new
-      end
-    else choice 3 Edit Tasks
-      RoutinesApp-->Routine:editModifyTask()
-      Routine->Routine:selectTask()
-      Routine-->Selection:selectItem()
-      activate Selection
-      Selection->Routine: index of Task
-      deactivate Selection
-    else choice 4 Delete Tasks
-      RoutinesApp->Routine:editDeleteTask()
-      Routine->Routine:selectTask()
-      Routine-->Selection:selectItem()
-      activate Selection
-      Selection->Routine: index of Task
-      deactivate Selection
-    end
+  else choice Manage routines
+    MainScene->Screen:goToScreen(ADD)
+    Screen->Routine:addRoutineScene()
+    Routine->Task:new
+    Routine->User:setMyRoutines()
     User->Storage:save()
-  else choice 3 Run Routine
-    RoutinesApp->User:selectRoutine()
-    User-->Selection:selectItem()
-    activate Selection
-    Selection->User:index of Routine
-    deactivate Selection
-    User-->RoutinesApp:routineToRun
-    RoutinesApp->Routine:routineToRun.run()
-    Routine-->RoutinesApp:tasks
+  else choice Preferences
+    MainScene->Screen:goToScreen(PREFS)
+    activate Preferences
+    Preferences->User:setThemePreference()
+    User->Storage:save()
+    Preferences->Screen:updateStylesheets()
+  else choice Run Routine
+    MainScene->Screen:setScene(RUN)
+    Screen->Routine:runRoutineScene()
   end
 end

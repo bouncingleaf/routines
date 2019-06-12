@@ -13,7 +13,7 @@ import java.util.stream.Stream;
 class MainScene {
 
     static Scene getMainScene() {
-        class MenuItem {
+         class MenuItem {
             private String itemName;
             private Screen.Pages itemPage;
 

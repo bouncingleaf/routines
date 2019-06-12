@@ -5,7 +5,7 @@ import javafx.scene.control.ChoiceBox;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
 
-public class Preferences {
+class Preferences {
     /**
      * Build the scene for managing user preferences
      * @return The Scene for managing user preferences
@@ -33,10 +33,13 @@ public class Preferences {
         return Screen.getAScene(prefsLayout);
     }
 
-    private static void switchStylesheets(Theme oldVal, Theme newVal) {
+    static void switchStylesheets(Theme oldVal, Theme newVal) {
         User.getSignedInUser().setThemePreference(newVal);
         User.getSignedInUser().save();
-        Screen.updateStylesheets(oldVal, newVal);
+        if (Screen.getApplication() != null) {
+            // No application when testing, so skip this
+            Screen.updateStylesheets(oldVal, newVal);
+        }
     }
 
 }

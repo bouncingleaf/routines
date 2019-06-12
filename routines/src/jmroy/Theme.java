@@ -5,8 +5,9 @@ import java.io.Serializable;
 public class Theme implements Serializable {
     private String name;
     private String filename;
-    private static final Theme LIGHT = new Theme("Light", "LightTheme.css");
-    private static final Theme DARK = new Theme("Dark", "DarkTheme.css");
+    static final Theme TEST = new Theme("TestName", "TestFile");
+    static final Theme LIGHT = new Theme("Light", "LightTheme.css");
+    static final Theme DARK = new Theme("Dark", "DarkTheme.css");
     static final Theme DEFAULT = LIGHT;
     static final Theme[] THEMES = {LIGHT, DARK};
 

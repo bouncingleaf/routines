@@ -56,7 +56,7 @@ class User implements Serializable {
         return signedInUser;
     }
 
-    private static User createNewUser(String userName) {
+    static User createNewUser(String userName) {
         File usersFile = new File(User.USERS_FILE);
         try (
                 PrintWriter userWriter = new PrintWriter(new FileOutputStream(usersFile, true))
@@ -66,6 +66,7 @@ class User implements Serializable {
             // Save username to the users file
             userWriter.println(newUser.getUserName());
 
+            newUser.save();
             return newUser;
         } catch (FileNotFoundException e) {
             e.printStackTrace();
@@ -73,8 +74,12 @@ class User implements Serializable {
         }
     }
 
+    static String userNamePurify(String name){
+        return name.toLowerCase().replaceAll("[^a-z0-9]", "");
+    }
+
     static Screen.Pages signIn(String nameInput) {
-        String name = nameInput.toLowerCase().replaceAll("[^a-z0-9]", "");
+        String name = userNamePurify(nameInput);
         if (name.length() > 0) {
             if (userFound(name)) {
                 setSignedInUser(User.load(name));
@@ -84,6 +89,7 @@ class User implements Serializable {
                 return Screen.Pages.NAME;
             }
         } else {
+            // Something has gone wrong, we shouldn't get here
             System.out.println("Sign in not valid");
             return Screen.Pages.ERROR;
         }
@@ -101,7 +107,7 @@ class User implements Serializable {
      * @param userName String of the user name to look for
      * @return true if the user is found, false if not
      */
-    private static boolean userFound(String userName) {
+     static boolean userFound(String userName) {
         // Open the users file, establish a reader, and get the user
         File usersFile = new File(User.USERS_FILE);
         try (
@@ -152,7 +158,6 @@ class User implements Serializable {
                 getSignedInUser().getThemePreference().getFilename();
     }
 
-
     // Instance Methods
 
     /**
@@ -197,28 +202,6 @@ class User implements Serializable {
     }
 
     /**
-     * Lists all the routines for the user and all the tasks on each routine
-     * Precondition: A current user must be defined.
-     * Postcondition: If the user has routines, they are listed along with their tasks.
-     *   If the user has no routines, a message is displayed.
-     */
-    void listRoutines() {
-        // Get the routines
-        ArrayList<Routine> routines = getMyRoutines();
-        // If there aren't any, exit
-        if (routines.size() == 0) {
-            System.out.printf("No routines yet for %s.\n", getName());
-        }
-        // Otherwise, list the routines and their tasks
-        else {
-            System.out.printf("%s's routines:\n", getName());
-            for (Routine routine : routines) {
-                System.out.printf("\t%s", routine.getTitle());
-            }
-        }
-    }
-
-    /**
      * Serializes the User object and saves the data to a file specific to that user.
      */
     void save () {
@@ -235,7 +218,7 @@ class User implements Serializable {
         }
     }
 
-    private Theme getThemePreference() {
+    Theme getThemePreference() {
         return themePreference;
     }
 

@@ -36,10 +36,4 @@ class TaskTest {
         }
     }
 
-    /*
-     * getTimeForDisplay() is tested in TimedTaskTest and UntimedTaskTest
-     * I would probably handle setName and getName that way also, instead
-     * of using the upcasting shown above, but I wanted an example of
-     * upcasting for the assignment :)
-     */
 }
