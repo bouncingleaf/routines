@@ -12,6 +12,7 @@ public class RoutinesApp extends Application {
     @Override
     public void start(Stage primaryStage) {
         Screen screen = new Screen(primaryStage, "Routines!");
+        Database.createDb(false);
         Screen.setApplication(screen);
         Screen.goToScreen(Screen.Pages.LOGIN);
         screen.show();
