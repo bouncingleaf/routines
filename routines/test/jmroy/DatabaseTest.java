@@ -24,16 +24,15 @@ class DatabaseTest {
     void testGetUser(){
         assertEquals("ABC", dummy);
         ArrayList<User> users = db.queryUsers();
-        assertEquals(0, users.size());
+        int currentSize = users.size();
         db.insertUser(USER_ONE);
         db.insertUser(USER_TWO);
         users = db.queryUsers();
-        assertEquals(1, users.size());
+        assertEquals(currentSize + 2, users.size());
         User firstResult = users.get(0);
         assertEquals(firstResult.getName(), USER_ONE.getName());
         assertEquals(firstResult.getUserName(), USER_ONE.getUserName());
-        assertEquals(firstResult.getId(), USER_ONE.getId());
-        assertEquals(firstResult.getThemePreference(), USER_ONE.getThemePreference());
+        assertEquals(firstResult.getThemePreference().getName(), USER_ONE.getThemePreference().getName());
     }
 
     @Test
@@ -43,6 +42,11 @@ class DatabaseTest {
         db.insertUser(USER_TWO);
         USER_ONE.setName("Corvus Corax");
         db.updateUser(USER_ONE);
+    }
 
+    @Test
+    void testThemes() {
+        assertEquals(4, Theme.getAllThemes().size());
+        assertEquals(2, Theme.getShownThemes().size());
     }
 }

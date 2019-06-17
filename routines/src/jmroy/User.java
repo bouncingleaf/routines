@@ -15,7 +15,7 @@ class User {
     static final String TEST_USER = "junittest";
 
     // Instance variables
-    private long id;
+    private int id;
     private ArrayList<Routine> myRoutines;
     private String name;
     private String userName;
@@ -39,7 +39,6 @@ class User {
     User(String userName, String name) {
         this(userName);
         // Poor id choice for a production system, but it should work for now
-        this.id = System.currentTimeMillis();
         this.name = name.equals("") ? userName : name;
     }
 
@@ -50,7 +49,7 @@ class User {
      * @param themeName The name of the user's chosen theme
      * @param id The user's already existing ID
      */
-    User(long id, String userName, String name, String themeName) {
+    User(int id, String userName, String name, String themeName) {
         this(userName);
         this.id = id;
         this.name = name.equals("") ? userName : name;
@@ -94,7 +93,7 @@ class User {
         getSignedInUser().save();
     }
 
-    static User load (String username) {
+    static User load(String username) {
         return Database.getDb().getUserByUsername(username);
     }
 
@@ -105,7 +104,7 @@ class User {
 
     // Instance Methods
 
-    long getId () { return id; }
+    int getId () { return id; }
 
     /**
      * Gets all the routines for this user.
@@ -148,7 +147,9 @@ class User {
     }
 
     void save() {
+        System.out.println("save in " + this);
         Database.getDb().upsertUser(this);
+        System.out.println("save out");
     }
 
     Theme getThemePreference() {

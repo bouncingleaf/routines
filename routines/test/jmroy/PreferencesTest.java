@@ -8,7 +8,8 @@ class PreferencesTest {
 
     @Test
     void switchStylesheets() {
-        // Setup a test application to change the stylesheet for
+        // Setup database
+        Database.createDb(true);
 
         // Set up a test user to change the stylesheet for
         String username = User.userNamePurify(User.TEST_USER + "style");

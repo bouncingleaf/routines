@@ -32,16 +32,16 @@ class Database {
         // Round One: Tables with no foreign keys
         THEME("Theme",
                 "name varchar(20) not null, " +
-                        "filename varchar(30) not null," +
-                        "showTheme boolean," +
+                        "filename varchar(30) not null, " +
+                        "showTheme boolean, " +
                         "primary key (name)"),
         // Round Two: Tables with only foreign keys from round one
         USER("UserTable",
-                "id int, " +
-                        "name varchar(50), " +
+                "user_id int not null generated always as identity, " +
                         "username varchar(30), " +
-                        "theme varchar(20)," +
-                        "primary key (id)," +
+                        "name varchar(50), " +
+                        "theme varchar(20), " +
+                        "primary key (user_id), " +
                         "foreign key (theme) references Theme (name)");
 
         private final String name;
@@ -61,15 +61,14 @@ class Database {
         }
     }
 
-    private static Database db;
-
+    private static Database currentDatabase;
 
     static Database getDb() {
-        return db;
+        return currentDatabase;
     }
 
     static void createDb(boolean test) {
-        db = new Database(test);
+        currentDatabase = new Database(test);
     }
 
     /* We will be using Statement and PreparedStatement objects for
@@ -81,15 +80,30 @@ class Database {
     private ArrayList<Statement> statements = new ArrayList<>(); // list of Statements, PreparedStatements
     private Statement s;
 
-    /**
+    /*
      * This program will will try to connect to a network server on this
      * host (the localhost).
      * Creates a database by making a connection to Derby (automatically loading
      * the driver)
      */
 
+    /**
+     * The initialization of the database. Should only need to do this once.
+     * Creates all the tables for the test database and the "live" database.
+     *
+     * @param args Arguments, ignored
+     */
+    public static void main(String[] args) {
+        // Should only need to do this once
+        Database db = new Database(true);
+        db.createTables();
+        db = new Database(false);
+        db.createTables();
+        System.out.println("Done.");
+    }
+
     private Database(boolean test) {
-        String DB_NAME = test? "routinesTestDB" : "routinesDB";
+        String DB_NAME = test ? "routinesTestDB" : "routinesDB";
         String PROTOCOL = "jdbc:derby://localhost:1527/";
 
         try {
@@ -119,8 +133,6 @@ class Database {
 
             commit("created db: " + DB_NAME);
 
-            createTables();
-
         } catch (SQLException sqle) {
             printSQLException(sqle);
             cleanUp();
@@ -132,11 +144,9 @@ class Database {
      *----------------------------------------------------------------------*/
 
     /**
-     * Drops tables first if this is the test DB
      * Creates all of the tables, in the specified order.
      * Populates the themes table, if everything just got dropped
      * Postcondition: Tables are created
-     *
      */
     private void createTables() {
         try {
@@ -146,11 +156,27 @@ class Database {
                         "(" + table.getTableDefinition() + ")");
             }
             commit("created tables");
+            for (Theme theme : Theme.ALL_THEMES) {
+                insertTheme(theme);
+            }
         } catch (SQLException sqle) {
             printSQLException(sqle);
             cleanUp();
         }
     }
+
+//    private void dropTables() {
+//        try{
+//            Table[] tables = Table.values();
+//            for (int i = tables.length - 1; i > 0; i--) {
+//                s.execute("drop table " + tables[i].getTableName());
+//            }
+//            commit("dropped tables");
+//        } catch (SQLException sqle) {
+//            printSQLException(sqle);
+//            cleanUp();
+//        }
+//    }
 
     private void cleanUp() {
         // release all open resources to avoid unnecessary memory usage
@@ -230,21 +256,18 @@ class Database {
         PreparedStatement psInsert;
 
         try {
-            // parameter 1 is id (int),
+            // parameter 1 is username (varchar),
             // parameter 2 is name (varchar),
-            // parameter 3 is username (varchar),
-            // parameter 4 is theme (varchar)
-            psInsert = conn.prepareStatement(
-                    "insert into " + Table.USER.name() +
-                            " values (?, ?, ?, ?)");
+            // parameter 3 is theme (varchar)
+            psInsert = conn.prepareStatement("insert into " +
+                            Table.USER.getTableName() +
+                            " (username, name, theme) values (?, ?, ?)");
             statements.add(psInsert);
-
-            psInsert.setLong(1, user.getId());
+            psInsert.setString(1, user.getUserName());
             psInsert.setString(2, user.getName());
-            psInsert.setString(3, user.getUserName());
-            psInsert.setString(4, user.getThemePreference().getName());
+            psInsert.setString(3, user.getThemePreference().getName());
             psInsert.executeUpdate();
-            commit("insert user" + user.getName());
+            commit("insert user " + user.getName());
         } catch (SQLException sqle) {
             printSQLException(sqle);
             cleanUp();
@@ -252,42 +275,44 @@ class Database {
     }
 
     void updateUser(User user) {
+        System.out.println("update in");
         PreparedStatement psUpdate;
         try {
             psUpdate = conn.prepareStatement(
-                    "update " + Table.USER.name() +
-                            "set name=? " +
-                            "username=? " +
+                    "update " + Table.USER.getTableName() + " set " +
+                            "username=?, " +
+                            "name=?, " +
                             "theme=? " +
-                            "where id=?");
+                            "where user_id=?");
             statements.add(psUpdate);
-            psUpdate.setString(1, user.getName());
-            psUpdate.setString(2, user.getUserName());
+            psUpdate.setString(1, user.getUserName());
+            psUpdate.setString(2, user.getName());
             psUpdate.setString(3, user.getThemePreference().getName());
-            psUpdate.setLong(4, user.getId());
+            psUpdate.setInt(4, user.getId());
             psUpdate.executeUpdate();
             commit("update user's name for " + user.getId() + " to " + user.getName());
         } catch (SQLException sqle) {
             printSQLException(sqle);
             cleanUp();
         }
+        System.out.println("update out");
     }
 
     ArrayList<User> queryUsers() {
         ArrayList<User> users = new ArrayList<>();
         ResultSet rs;
         try {
-            rs = s.executeQuery("SELECT id, name, username, theme " +
-                    " FROM " + Table.USER.name() + " ORDER BY id");
+            rs = s.executeQuery("SELECT user_id, username, name, theme " +
+                    " FROM " + Table.USER.getTableName() + " ORDER BY user_id");
             while (rs.next()) {
                 users.add(new User(
-                        rs.getLong(1),
+                        rs.getInt(1),
                         rs.getString(2),
                         rs.getString(3),
                         rs.getString(4)
                 ));
             }
-            commit("query");
+            commit("queryUsers");
         } catch (SQLException sqle) {
             printSQLException(sqle);
             cleanUp();
@@ -295,19 +320,27 @@ class Database {
         return users;
     }
 
-    User getUserByUsername(String username) {
+    User getUserByUsername(String usernameInput) {
+        PreparedStatement psQuery;
+        System.out.println("get by un " + usernameInput);
         User user = null;
         ResultSet rs;
         try {
-            rs = s.executeQuery("SELECT id, name, username, theme " +
-                    "FROM " + Table.USER.name() + "WHERE username=" + username);
+            psQuery = conn.prepareStatement(
+                    "SELECT user_id, username, name, theme " +
+                            "FROM " + Table.USER.getTableName() +
+                            " WHERE username=?"
+            );
+            statements.add(psQuery);
+            psQuery.setString(1, usernameInput);
+            rs = psQuery.executeQuery();
             if (rs.next()) {
-                user = new User(
-                        rs.getLong(1),
-                        rs.getString(2),
-                        rs.getString(3),
-                        rs.getString(4)
-                );
+                int user_id = rs.getInt(1);
+                String username = rs.getString(2);
+                String name = rs.getString(3);
+                String theme = rs.getString(4);
+                System.out.printf("So making %d %s %s %s", user_id, name, username, theme);
+                user = new User(user_id, username, name, theme);
             }
             commit("getUserByUsername");
         } catch (SQLException sqle) {
@@ -317,40 +350,25 @@ class Database {
         return user;
     }
 
-//    int getMaxUserId() {
-//        ResultSet rs;
-//        int max = 0;
-//        try {
-//            rs = s.executeQuery("SELECT max(id) FROM " + Table.USER.name());
-//            commit("query");
-//            if (rs.next()) {
-//                max = rs.getInt(1);
-//            }
-//        } catch (SQLException sqle) {
-//            printSQLException(sqle);
-//            cleanUp();
-//        }
-//        return max;
-//    }
-
     /*----------------------------------------------------------------------*
      * Theme table methods
      *----------------------------------------------------------------------*/
 
-    void insertTheme(Theme theme) {
+    private void insertTheme(Theme theme) {
         PreparedStatement psInsert;
 
         try {
             // parameter 1 is name (varchar),
             // parameter 2 is filename (varchar),
+            // parameter 3 is showTheme (boolean)
             psInsert = conn.prepareStatement(
-                    "insert into " + Table.THEME.name() + " values (?, ?, ?)");
+                    "insert into " + Table.THEME.getTableName() + " values (?, ?, ?)");
             statements.add(psInsert);
             psInsert.setString(1, theme.getName());
             psInsert.setString(2, theme.getFilename());
             psInsert.setBoolean(3, theme.getShowTheme());
             psInsert.executeUpdate();
-            commit("insert theme" + theme.getName());
+            commit("insert theme: " + theme.getName());
         } catch (SQLException sqle) {
             printSQLException(sqle);
             cleanUp();
@@ -362,8 +380,8 @@ class Database {
         Theme themeFound = null;
         try {
             PreparedStatement psSearch = conn.prepareStatement(
-                    "SELECT name, filename FROM " + Table.THEME.name() +
-                            "WHERE name=?"
+                    "SELECT name, filename, showTheme FROM " + Table.THEME.getTableName() +
+                            " WHERE name=?"
             );
             statements.add(psSearch);
             psSearch.setString(1, name);
@@ -376,7 +394,7 @@ class Database {
                         rs.getBoolean(3));
             }
 
-            commit("query");
+            commit("query theme: " + name);
         } catch (SQLException sqle) {
             printSQLException(sqle);
             cleanUp();
@@ -388,7 +406,7 @@ class Database {
         ArrayList<Theme> themes = new ArrayList<>();
         ResultSet rs;
         try {
-            rs = s.executeQuery("SELECT name, filename FROM " + Table.THEME.name() + " ORDER BY name");
+            rs = s.executeQuery("SELECT name, filename, showTheme FROM " + Table.THEME.getTableName() + " ORDER BY name");
             while (rs.next()) {
                 themes.add(new Theme(
                         rs.getString(1),
@@ -397,7 +415,7 @@ class Database {
                 ));
             }
 
-            commit("query");
+            commit("queryThemes");
         } catch (SQLException sqle) {
             printSQLException(sqle);
             cleanUp();
