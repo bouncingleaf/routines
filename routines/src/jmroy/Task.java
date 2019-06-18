@@ -10,8 +10,9 @@ abstract class Task implements Serializable {
     // Instance variables
 
     private String name;
-    private long id;
-    private long routineID;
+    private int id;
+    private int routineID;
+    private boolean active = true;
 
     // Constructors
 
@@ -19,9 +20,9 @@ abstract class Task implements Serializable {
      * Constructor for new Tasks
      * @param name The name of the Task
      */
-    Task(String name, long routineID) {
+    Task(String name, int routineID) {
         // This is a terrible way to assign a unique ID but it will do for now
-        this.id = System.currentTimeMillis();
+        this.id = getNewTaskID();
         this.name = name;
         this.routineID = routineID;
     }
@@ -31,10 +32,15 @@ abstract class Task implements Serializable {
      * @param id The id of the Task
      * @param name The name of the Task
      */
-    Task(long id, String name, long routineID) {
+    Task(int id, String name, int routineID, boolean active) {
         this.id = id;
         this.name = name;
         this.routineID = routineID;
+        this.active = active;
+    }
+
+    private static int getNewTaskID() {
+        return Database.getDb().getMaxTaskID() + 1;
     }
 
     // Methods
@@ -49,11 +55,11 @@ abstract class Task implements Serializable {
         this.name = name;
     }
 
-    long getID() {
+    int getID() {
         return id;
     }
 
-    long getRoutineID() {
+    int getRoutineID() {
         return routineID;
     }
 

@@ -15,7 +15,7 @@ class User {
     static final String TEST_USER = "junittest";
 
     // Instance variables
-    private long id;
+    private int id;
     private ArrayList<Routine> myRoutines;
     private String name;
     private String userName;
@@ -28,7 +28,7 @@ class User {
     private User(String userName)
     {
         // This is a terrible way to assign a unique ID but it will do for now
-        this.id = System.currentTimeMillis();
+        this.id = getNewUserID();
         this.myRoutines = new ArrayList<>();
         this.userName = userName;
     }
@@ -50,7 +50,7 @@ class User {
      * @param name The user's chosen name, or empty string to just use username
      * @param themeName The name of the user's chosen theme
      */
-    User(long id, String userName, String name, String themeName) {
+    User(int id, String userName, String name, String themeName) {
         this(userName);
         this.id = id;
         this.name = name.equals("") ? userName : name;
@@ -58,6 +58,10 @@ class User {
     }
 
     // Class Methods
+
+    private static int getNewUserID() {
+        return Database.getDb().getMaxUserID() + 1;
+    }
 
     private static void setSignedInUser(User user) {
         signedInUser = user;
@@ -116,7 +120,7 @@ class User {
 
     // Instance Methods
 
-    long getID () { return id; }
+    int getID () { return id; }
 
     /**
      * Gets all the routines for this user.

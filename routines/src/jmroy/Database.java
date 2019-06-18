@@ -61,8 +61,8 @@ class Database {
         TASK("Task",
                 "task_id bigint not null, " +
                         "task_name varchar(255), " +
-                        "task_type varchar(10), " +
                         "task_routine_id bigint, " +
+                        "task_active boolean, " +
                         "primary key (task_id), " +
                         "foreign key (task_routine_id) references Routine (routine_id)"),
         // Round Five...
@@ -187,13 +187,28 @@ class Database {
                         "(" + table.getTableDefinition() + ")");
             }
             commit("created tables");
-            for (Theme theme : Theme.ALL_THEMES) {
-                insertTheme(theme);
-            }
+            insertDefaults();
         } catch (SQLException sqle) {
             printSQLException(sqle);
             cleanUp();
         }
+    }
+
+    private void insertDefaults() {
+        try {
+            for (Theme theme : Theme.ALL_THEMES) {
+                insertTheme(theme);
+            }
+            // This is a bit of a cheat, but it makes sure we never
+            insertUser(new User(0, "admin", "Admin User", Theme.DEFAULT.getName()), false);
+            insertRoutine(new Routine(0, "Admin Routine"), false);
+            insertTask(new UntimedTask(0, "Admin Task", 0, true), false);
+            commit("inserted admin user");
+        } catch (SQLException sqle) {
+            printSQLException(sqle);
+            cleanUp();
+        }
+
     }
 
     /**
@@ -367,7 +382,7 @@ class Database {
             psUpdate.setString(1, user.getUserName());
             psUpdate.setString(2, user.getName());
             psUpdate.setString(3, user.getThemePreference().getName());
-            psUpdate.setLong(4, user.getID());
+            psUpdate.setInt(4, user.getID());
             psUpdate.executeUpdate();
             if (commitTransaction) {
                 commit("update user's name for " + user.getID() + " to " + user.getName());
@@ -392,7 +407,7 @@ class Database {
                     " FROM " + Table.USER.getTableName() + " ORDER BY user_id");
             while (rs.next()) {
                 users.add(new User(
-                        rs.getLong(1),
+                        rs.getInt(1),
                         rs.getString(2),
                         rs.getString(3),
                         rs.getString(4)
@@ -404,6 +419,28 @@ class Database {
             cleanUp();
         }
         return users;
+    }
+
+    /**
+     * Max user_id from UserTable
+     *
+     * @return An int, the largest user_id
+     */
+    int getMaxUserID() {
+        ResultSet rs;
+        int max = 0;
+        try {
+            rs = s.executeQuery("SELECT MAX (user_id) " +
+                    " FROM " + Table.USER.getTableName());
+            if (rs.next()) {
+               max = rs.getInt(1);
+            }
+            commit("getMaxUserID");
+        } catch (SQLException sqle) {
+            printSQLException(sqle);
+            cleanUp();
+        }
+        return max;
     }
 
     /**
@@ -427,7 +464,7 @@ class Database {
             psQuery.setString(1, usernameInput);
             rs = psQuery.executeQuery();
             if (rs.next()) {
-                long user_id = rs.getLong(1);
+                int user_id = rs.getInt(1);
                 String username = rs.getString(2);
                 String name = rs.getString(3);
                 String theme = rs.getString(4);
@@ -448,7 +485,7 @@ class Database {
      * @param idInput The ID of the user to get
      * @return The User corresponding to that ID
      */
-    private User getUserByID(long idInput) {
+    private User getUserByID(int idInput) {
         System.out.println("input is " + idInput);
         PreparedStatement psQuery;
         User user = null;
@@ -460,11 +497,11 @@ class Database {
                             " WHERE user_id=?"
             );
             statements.add(psQuery);
-            psQuery.setLong(1, idInput);
+            psQuery.setInt(1, idInput);
             rs = psQuery.executeQuery();
             if (rs.next()) {
                 user = new User(
-                        rs.getLong(1),
+                        rs.getInt(1),
                         rs.getString(2),
                         rs.getString(3),
                         rs.getString(4)
@@ -608,7 +645,7 @@ class Database {
             // parameter 1 is routine_name (varchar),
             // parameter 2 is routine_user_id (int),
             psInsert.setString(1, routine.getName());
-            psInsert.setLong(2, User.getSignedInUser().getID());
+            psInsert.setInt(2, User.getSignedInUser().getID());
             psInsert.executeUpdate();
             if (commitTransaction) {
                 commit("insertRoutine");
@@ -639,8 +676,8 @@ class Database {
             // parameter 2 is routine_user_id (int),
             // parameter 3 is routine_id (int)
             psUpdate.setString(1, routine.getName());
-            psUpdate.setLong(2, User.getSignedInUser().getID());
-            psUpdate.setLong(3, routine.getID());
+            psUpdate.setInt(2, User.getSignedInUser().getID());
+            psUpdate.setInt(3, routine.getID());
             psUpdate.executeUpdate();
             if (commitTransaction) {
                 commit("updateRoutine");
@@ -669,11 +706,11 @@ class Database {
             );
             statements.add(psQuery);
             // Parameter is routine_user_id (int)
-            psQuery.setLong(1, user.getID());
+            psQuery.setInt(1, user.getID());
             rs = psQuery.executeQuery();
             while (rs.next()) {
                 routines.add(new Routine(
-                        rs.getLong(1),
+                        rs.getInt(1),
                         rs.getString(2)
                 ));
             }
@@ -691,7 +728,7 @@ class Database {
      * @param idInput The id of the routine to get
      * @return The Routine corresponding to that id
      */
-    private Routine getRoutineByID(long idInput) {
+    private Routine getRoutineByID(int idInput) {
         PreparedStatement psQuery;
         Routine routine = null;
         ResultSet rs;
@@ -702,10 +739,10 @@ class Database {
                             " WHERE routine_id=?"
             );
             statements.add(psQuery);
-            psQuery.setLong(1, idInput);
+            psQuery.setInt(1, idInput);
             rs = psQuery.executeQuery();
             if (rs.next()) {
-                long routine_id = rs.getLong(1);
+                int routine_id = rs.getInt(1);
                 String routine_name = rs.getString(2);
                 System.out.printf("So making %d %s", routine_id, routine_name);
                 routine = new Routine(routine_id, routine_name);
@@ -716,6 +753,28 @@ class Database {
             cleanUp();
         }
         return routine;
+    }
+
+    /**
+     * Max routine_id from Routine table
+     *
+     * @return An int, the largest routine_id
+     */
+    int getMaxRoutineID() {
+        ResultSet rs;
+        int max = 0;
+        try {
+            rs = s.executeQuery("SELECT MAX (routine_id) " +
+                    " FROM " + Table.ROUTINE.getTableName());
+            if (rs.next()) {
+                max = rs.getInt(1);
+            }
+            commit("getMaxRoutineID");
+        } catch (SQLException sqle) {
+            printSQLException(sqle);
+            cleanUp();
+        }
+        return max;
     }
 
     /*----------------------------------------------------------------------*
@@ -744,13 +803,13 @@ class Database {
      * @param commitTransaction True to commit, false to skip commit
      *                          Useful if transaction is in progress
      */
-    private void deleteTask(long id, @SuppressWarnings("SameParameterValue") boolean commitTransaction) {
+    private void deleteTask(int id, @SuppressWarnings("SameParameterValue") boolean commitTransaction) {
         PreparedStatement psUpdate;
         try {
             psUpdate = conn.prepareStatement("DELETE FROM " +
                     Table.TASK.getTableName() +
                     " WHERE task_id=?");
-            psUpdate.setLong(1, id);
+            psUpdate.setInt(1, id);
             psUpdate.executeUpdate();
             if (commitTransaction) {
                 commit("deleteTask");
@@ -770,17 +829,35 @@ class Database {
      */
     private void insertTask(Task task, boolean commitTransaction) {
         PreparedStatement psInsert;
+        PreparedStatement psInsertSubtype;
 
         try {
+            // Insert into the Task table
             psInsert = conn.prepareStatement("insert into " +
                     Table.TASK.getTableName() +
-                    " (task_name, task_routine_id) values (?, ?)");
+                    " (task_id, task_name, task_routine_id) values (?, ?, ?)");
             statements.add(psInsert);
-            // parameter 1 is task_name (varchar),
-            // parameter 2 is task_routine_id (int),
-            psInsert.setString(1, task.getName());
-            psInsert.setLong(2, task.getRoutineID());
+            // parameter 1 is task_id (int)
+            // parameter 2 is task_name (varchar),
+            // parameter 3 is task_routine_id (int),
+            psInsert.setInt(1, task.getID());
+            psInsert.setString(2, task.getName());
+            psInsert.setInt(3, task.getRoutineID());
             psInsert.executeUpdate();
+
+            // Insert into the TimedTask or UntimedTask table also
+            String tableInsert = task instanceof TimedTask ?
+                    Table.TIMED_TASK.getTableName() +
+                    " (task_id, task_minutes) values (?, ?, ?, ?)":
+                    Table.UNTIMED_TASK.getTableName() +
+                            " (task_id) values (?)";
+            psInsertSubtype = conn.prepareStatement("insert into " + tableInsert);
+            psInsertSubtype.setInt(1, task.getID());
+            if (task instanceof TimedTask) {
+                psInsertSubtype.setInt(2, ((TimedTask) task).getMinutes());
+            }
+            psInsertSubtype.executeUpdate();
+
             if (commitTransaction) {
                 commit("insert task " + task.getName());
             }
@@ -804,14 +881,16 @@ class Database {
                     "update " + Table.TASK.getTableName() + " set " +
                             "task_name=?, " +
                             "task_user_id=?, " +
+                            "task_active=? " +
                             "where task_id=?");
             statements.add(psUpdate);
             // parameter 1 is task_name (varchar),
             // parameter 2 is task_user_id (int),
-            // parameter 3 is task_id (int)
+            // parameter 3 is task_active (boolean),
+            // parameter 4 is task_id (int)
             psUpdate.setString(1, task.getName());
-            psUpdate.setLong(2, User.getSignedInUser().getID());
-            psUpdate.setLong(3, task.getID());
+            psUpdate.setInt(2, User.getSignedInUser().getID());
+            psUpdate.setInt(3, task.getID());
             psUpdate.executeUpdate();
             if (commitTransaction) {
                 commit("update task for " + task.getID() + " to " + task.getName());
@@ -830,32 +909,33 @@ class Database {
     ArrayList<Task> queryTasksForRoutine(Routine routine) {
         ArrayList<Task> tasks = new ArrayList<>();
         PreparedStatement psQuery;
-//        String taskType;
         ResultSet rs;
         try {
             psQuery = conn.prepareStatement(
-                    "SELECT task_id, task_name, task_type, task_routine_id, task_minutes" +
+                    "SELECT task_id, task_name, task_routine_id, task_minutes, task_active" +
                             " FROM " + Table.TASK.getTableName() +
                             " JOIN " + Table.TIMED_TASK.getTableName() +
                             " ON Task.task_id = TimedTask.task_id" +
                             " WHERE task_routine_id=? "
             );
             statements.add(psQuery);
-            psQuery.setLong(1, routine.getID());
+            psQuery.setInt(1, routine.getID());
             rs = psQuery.executeQuery();
             while (rs.next()) {
-//                taskType = rs.getString(3);
-                // TODO: join with TimedTask and UntimedTask and create appropriate task
                 tasks.add(
                         rs.getInt(4) > 0 ?
                                 new TimedTask(
+                                        rs.getInt(1),
                                         rs.getString(2),
-                                        rs.getLong(1),
-                                        rs.getInt(4)
+                                        rs.getInt(3),
+                                        rs.getInt(4),
+                                        rs.getBoolean(5)
                                 ) :
                                 new UntimedTask(
+                                        rs.getInt(1),
                                         rs.getString(2),
-                                        rs.getLong(1)
+                                        rs.getInt(3),
+                                        rs.getBoolean(5)
                                 ));
             }
             commit("queryTasksForRoutine");
@@ -872,31 +952,32 @@ class Database {
      * @param idInput The id of the task to get
      * @return The Task corresponding to that id
      */
-    private Task getTaskByID(long idInput) {
+    private Task getTaskByID(int idInput) {
         PreparedStatement psQuery;
         Task task = null;
         ResultSet rs;
         try {
             psQuery = conn.prepareStatement(
-                    "SELECT task_id, task_name, task_routine_id, task_minutes " +
+                    "SELECT task_id, task_name, task_routine_id, task_minutes, task_active " +
                             "FROM " + Table.TASK.getTableName() +
                             " JOIN " + Table.TIMED_TASK.getTableName() +
                             " ON Task.task_id = TimedTask.task_id" +
                             " WHERE task_id=?"
             );
             statements.add(psQuery);
-            psQuery.setLong(1, idInput);
+            psQuery.setInt(1, idInput);
             rs = psQuery.executeQuery();
             if (rs.next()) {
-                long task_id = rs.getLong(1);
+                int task_id = rs.getInt(1);
                 String task_name = rs.getString(2);
-                long task_routine_id = rs.getLong(3);
+                int task_routine_id = rs.getInt(3);
                 int task_minutes = rs.getInt(4);
+                boolean task_active = rs.getBoolean(5);
                 System.out.printf("So making %d %s", task_id, task_name);
                 // TODO: Distinguish timed and untimed
                 task = task_minutes > 0 ?
-                        new TimedTask(task_id, task_name, task_routine_id, task_minutes) :
-                        new UntimedTask(task_id, task_name, task_routine_id);
+                        new TimedTask(task_id, task_name, task_routine_id, task_minutes, task_active) :
+                        new UntimedTask(task_id, task_name, task_routine_id, task_active);
             }
             commit("getRoutineByID");
         } catch (SQLException sqle) {
@@ -905,6 +986,29 @@ class Database {
         }
         return task;
     }
+
+    /**
+     * Max task_id from Task table
+     *
+     * @return An int, the largest task_id
+     */
+    int getMaxTaskID() {
+        ResultSet rs;
+        int max = 0;
+        try {
+            rs = s.executeQuery("SELECT MAX (task_id) " +
+                    " FROM " + Table.TASK.getTableName());
+            if (rs.next()) {
+                max = rs.getInt(1);
+            }
+            commit("getMaxTaskID");
+        } catch (SQLException sqle) {
+            printSQLException(sqle);
+            cleanUp();
+        }
+        return max;
+    }
+
 
     // Round Five...
 //    TIMED_TASK("TimedTask",

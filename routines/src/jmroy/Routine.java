@@ -30,7 +30,7 @@ class Routine implements Serializable {
 
     private String title = "My Routine";
     private ArrayList<Task> tasks;
-    private long id;
+    private int id;
 
     // Constructors
 
@@ -39,7 +39,7 @@ class Routine implements Serializable {
      */
     private Routine() {
         // This is a terrible way to assign a unique ID but it will do for now
-        this.id = System.currentTimeMillis();
+        this.id = getNewRoutineID();
         this.tasks = new ArrayList<>();
     }
 
@@ -57,12 +57,16 @@ class Routine implements Serializable {
      * @param id The id of the routine in the database
      * @param title The title of the routine
      */
-    Routine(long id, String title) {
+    Routine(int id, String title) {
         this(title);
         this.id = id;
     }
 
     // Class methods
+
+    private static int getNewRoutineID() {
+        return Database.getDb().getMaxRoutineID() + 1;
+    }
 
     static Scene addRoutineScene(Routine routine) {
         selectedRoutine = routine;
@@ -261,7 +265,7 @@ class Routine implements Serializable {
 
     // Methods
 
-    long getID() {
+    int getID() {
         return id;
     }
 
