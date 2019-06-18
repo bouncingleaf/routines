@@ -20,8 +20,9 @@ import java.util.Properties;
 class Database {
 
     /**
-     * name is a String with the name of the table
-     * definition is a String with the list of columns, for createTable
+     * This enum contains all the definitions for all of the tables.
+     * * name is a String with the name of the table
+     * * definition is a String with the list of columns, for createTable
      * <p>
      * *** LIST TABLES HERE IN CREATION ORDER ***
      * That is:
@@ -112,6 +113,8 @@ class Database {
     /**
      * The initialization of the database. Should only need to do this once.
      * Creates all the tables for the test database and the "live" database.
+     * If it doesn't work, make sure any old routinesTestDB and routinesDB
+     * files in the Derby bin directory are removed.
      *
      * @param args Arguments, ignored
      */
@@ -124,6 +127,12 @@ class Database {
         System.out.println("Done.");
     }
 
+    /**
+     * Establishes a connection to the database
+     *
+     * @param test False if we're working with the "real" database
+     *             True if we're working with the test database
+     */
     private Database(boolean test) {
         String DB_NAME = test ? "routinesTestDB" : "routinesDB";
         String PROTOCOL = "jdbc:derby://localhost:1527/";
@@ -187,6 +196,9 @@ class Database {
         }
     }
 
+    /**
+     * Cleans up if there's a crash
+     */
     private void cleanUp() {
         // release all open resources to avoid unnecessary memory usage
         System.out.println("Cleanup is happening...");
@@ -222,6 +234,8 @@ class Database {
     }
 
     /**
+     * Commits the transaction, logging a message
+     *
      * @throws SQLException if commit fails
      */
     private void commit(String message) throws SQLException {
@@ -256,13 +270,14 @@ class Database {
     /**
      * Insert a user if it's a new user; update if it's an existing user
      * And save the user's routines, and the routines' tasks
+     *
      * @param user The user to insert or update
      */
     void saveExistingUser(User user) {
         if (getUserByUsername(user.getUserName()) == null) {
             insertUser(user, false);
             for (Routine routine : user.getMyRoutines()) {
-                insertRoutine(routine,false);
+                insertRoutine(routine, false);
                 for (Task task : routine.getTasks()) {
                     insertTask(task, false);
                 }
@@ -496,6 +511,7 @@ class Database {
 
     /**
      * Get a Theme from the database by name
+     *
      * @param name The name of the theme to get
      * @return The Theme requested, or null if not found
      */
@@ -747,6 +763,7 @@ class Database {
 
     /**
      * Insert a new task
+     *
      * @param task              The task to insert
      * @param commitTransaction True to commit, false to skip commit
      *                          Useful if transaction is in progress
@@ -831,15 +848,15 @@ class Database {
                 // TODO: join with TimedTask and UntimedTask and create appropriate task
                 tasks.add(
                         rs.getInt(4) > 0 ?
-                        new TimedTask(
-                                rs.getString(2),
-                                rs.getLong(1),
-                                rs.getInt(4)
-                        ) :
-                        new UntimedTask(
-                                rs.getString(2),
-                                rs.getLong(1)
-                        ));
+                                new TimedTask(
+                                        rs.getString(2),
+                                        rs.getLong(1),
+                                        rs.getInt(4)
+                                ) :
+                                new UntimedTask(
+                                        rs.getString(2),
+                                        rs.getLong(1)
+                                ));
             }
             commit("queryTasksForRoutine");
         } catch (SQLException sqle) {
@@ -850,7 +867,7 @@ class Database {
     }
 
     /**
-     * Get a task based on their id
+     * Get a task from the database by Task id
      *
      * @param idInput The id of the task to get
      * @return The Task corresponding to that id
@@ -879,7 +896,7 @@ class Database {
                 // TODO: Distinguish timed and untimed
                 task = task_minutes > 0 ?
                         new TimedTask(task_id, task_name, task_routine_id, task_minutes) :
-            new UntimedTask(task_id, task_name, task_routine_id);
+                        new UntimedTask(task_id, task_name, task_routine_id);
             }
             commit("getRoutineByID");
         } catch (SQLException sqle) {
