@@ -13,8 +13,13 @@ class TimedTask extends Task implements Serializable {
 
     // Constructors
 
-    TimedTask(String name, int minutes) {
-        super(name);
+    TimedTask(String name, long routineID, int minutes) {
+        super(name, routineID);
+        this.minutes = minutes;
+    }
+
+    TimedTask(long id, String name, long routineID, int minutes) {
+        super(id, name, routineID);
         this.minutes = minutes;
     }
 

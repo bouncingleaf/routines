@@ -67,7 +67,7 @@ class UserTest {
     void testSaveAndLoad() {
         User saveTest = new User(User.TEST_USER, "Saved Test");
         Routine testRoutine = new Routine(TEST_ROUTINE);
-        testRoutine.addTask(new TimedTask("Example", 30));
+        testRoutine.addTask(new TimedTask("Example", testRoutine.getID(),30));
         saveTest.addRoutine(testRoutine);
         saveTest.save();
         saveTest = new User(User.TEST_USER + "overwritten", "Should be overwritten");

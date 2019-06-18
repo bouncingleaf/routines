@@ -15,7 +15,7 @@ class UntimedTaskTest {
 
     @BeforeEach
     void beforeEach() {
-        testTask = new UntimedTask(NAME);
+        testTask = new UntimedTask(NAME, -1);
     }
 
     @Test

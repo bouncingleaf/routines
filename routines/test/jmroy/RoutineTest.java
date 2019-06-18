@@ -20,8 +20,8 @@ class RoutineTest {
     private void addTwo() {
         final String TIMED = "Timed Task";
         final String UNTIMED = "Untimed Task";
-        testRoutine.addTask(new TimedTask(TIMED, 3));
-        testRoutine.addTask(new UntimedTask(UNTIMED));
+        testRoutine.addTask(new TimedTask(TIMED, -1, 3));
+        testRoutine.addTask(new UntimedTask(UNTIMED, -1));
     }
 
     @Test
