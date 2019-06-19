@@ -44,37 +44,42 @@ class Database {
                         "primary key (theme_name)"),
         // Round Two: Tables with only foreign keys from round one
         USER("UserTable",
-                "user_id bigint not null, " +
+                "user_id int not null, " +
                         "username varchar(30), " +
                         "name varchar(50), " +
                         "theme varchar(20), " +
                         "primary key (user_id), " +
-                        "foreign key (theme) references Theme (theme_name)"),
+                        "constraint fk_user_theme foreign key (theme) " +
+                        "references Theme (theme_name)"),
         // Round Three: Tables with only foreign keys from 1 and 2;
         ROUTINE("Routine",
-                "routine_id bigint not null, " +
+                "routine_id int not null, " +
                         "routine_name varchar(255)," +
-                        "routine_user_id bigint, " +
+                        "routine_user_id int, " +
                         "primary key (routine_id), " +
-                        "foreign key (routine_user_id) references UserTable (user_id)"),
+                        "constraint fk_routine_user foreign key (routine_user_id) " +
+                        "references UserTable (user_id)"),
         // Round Four: Tables with only foreign keys from rounds 1-3
         TASK("Task",
-                "task_id bigint not null, " +
+                "task_id int not null, " +
                         "task_name varchar(255), " +
-                        "task_routine_id bigint, " +
+                        "task_routine_id int, " +
                         "task_active boolean, " +
                         "primary key (task_id), " +
-                        "foreign key (task_routine_id) references Routine (routine_id)"),
+                        "constraint fk_task_routine foreign key (task_routine_id) " +
+                        "references Routine (routine_id)"),
         // Round Five...
         TIMED_TASK("TimedTask",
-                "task_id bigint, " +
-                        "length int, " +
+                "task_id int, " +
+                        "task_minutes int, " +
                         "primary key (task_id), " +
-                        "foreign key (task_id) references Task (task_id)"),
+                        "constraint fk_timed_task_task foreign key (task_id) " +
+                        "references Task (task_id)"),
         UNTIMED_TASK("UntimedTask",
-                "task_id bigint, " +
+                "task_id int, " +
                         "primary key (task_id), " +
-                        "foreign key (task_id) references Task (task_id)");
+                        "constraint fk_untimed_task_task foreign key (task_id) " +
+                        "references Task (task_id)");
 
         private final String name;
         private final String definition;
@@ -186,6 +191,8 @@ class Database {
                 s.execute("create table " + table.getTableName() +
                         "(" + table.getTableDefinition() + ")");
             }
+            s.execute("CREATE SEQUENCE id_value AS BIGINT " +
+                    " START WITH 0 INCREMENT BY 1");
             commit("created tables");
             insertDefaults();
         } catch (SQLException sqle) {
@@ -199,11 +206,14 @@ class Database {
             for (Theme theme : Theme.ALL_THEMES) {
                 insertTheme(theme);
             }
-            // This is a bit of a cheat, but it makes sure we never
-            insertUser(new User(0, "admin", "Admin User", Theme.DEFAULT.getName()), false);
-            insertRoutine(new Routine(0, "Admin Routine"), false);
+            // This is a bit of a hack, but it makes sure we always have at least
+            // one user, one routine, and one task.
+            User adminUser = new User(0, "admin", "Admin User", Theme.DEFAULT);
+            User.setSignedInUser(adminUser);
+            insertUser(adminUser, false);
+            insertRoutine(new Routine(0, "Admin Routine", 0), false);
             insertTask(new UntimedTask(0, "Admin Task", 0, true), false);
-            commit("inserted admin user");
+            commit("inserted defaults");
         } catch (SQLException sqle) {
             printSQLException(sqle);
             cleanUp();
@@ -288,32 +298,27 @@ class Database {
      *
      * @param user The user to insert or update
      */
-    void saveExistingUser(User user) {
+    void saveUser(User user) {
         if (getUserByUsername(user.getUserName()) == null) {
-            insertUser(user, false);
+            // New user, not found in DB
+            insertUser(user, true);
             for (Routine routine : user.getMyRoutines()) {
-                insertRoutine(routine, false);
+                insertRoutine(routine, true);
                 for (Task task : routine.getTasks()) {
-                    insertTask(task, false);
+                    insertTask(task, true);
                 }
             }
         } else {
-            // Users can't delete a routine at this time
-            // So all routines are either new or updated
+            // Users can't delete a routine or task
+            // So all routines and tasks are either new or updated
+            updateUser(user, true);
             for (Routine routine : user.getMyRoutines()) {
-                // Users CAN delete a task from a routine
-                ArrayList<Task> savedTasks = queryTasksForRoutine(routine);
+                upsertRoutine(routine, true);
+                // Users can't delete a task from a routine
                 for (Task task : routine.getTasks()) {
-                    savedTasks.removeIf(t -> (t.getID() == task.getID()));
-                    upsertTask(task, false);
+                    upsertTask(task, true);
                 }
-                for (Task task : savedTasks) {
-                    // Anything left is no longer in the routine's task list
-                    deleteTask(task.getID(), false);
-                }
-                upsertRoutine(routine, false);
             }
-            updateUser(user, false);
         }
     }
 
@@ -346,11 +351,12 @@ class Database {
             // parameter 3 is theme (varchar)
             psInsert = conn.prepareStatement("insert into " +
                     Table.USER.getTableName() +
-                    " (username, name, theme) values (?, ?, ?)");
+                    " (user_id, username, name, theme) values (?, ?, ?, ?)");
             statements.add(psInsert);
-            psInsert.setString(1, user.getUserName());
-            psInsert.setString(2, user.getName());
-            psInsert.setString(3, user.getThemePreference().getName());
+            psInsert.setInt(1, user.getID());
+            psInsert.setString(2, user.getUserName());
+            psInsert.setString(3, user.getName());
+            psInsert.setString(4, user.getThemePreference().getName());
             psInsert.executeUpdate();
             if (commitTransaction) {
                 commit("insert user " + user.getName());
@@ -368,8 +374,7 @@ class Database {
      * @param commitTransaction True to commit, false to skip commit
      *                          Useful if transaction is in progress
      */
-    void updateUser(User user, boolean commitTransaction) {
-        System.out.println("update in");
+    void updateUser(User user, @SuppressWarnings("SameParameterValue") boolean commitTransaction) {
         PreparedStatement psUpdate;
         try {
             psUpdate = conn.prepareStatement(
@@ -391,7 +396,6 @@ class Database {
             printSQLException(sqle);
             cleanUp();
         }
-        System.out.println("update out");
     }
 
     /**
@@ -403,14 +407,22 @@ class Database {
         ArrayList<User> users = new ArrayList<>();
         ResultSet rs;
         try {
-            rs = s.executeQuery("SELECT user_id, username, name, theme " +
-                    " FROM " + Table.USER.getTableName() + " ORDER BY user_id");
+            rs = s.executeQuery("SELECT user_id, username, name, theme, theme_file, theme_show " +
+                    " FROM " + Table.USER.getTableName() +
+                    " LEFT JOIN " + Table.THEME.getTableName() +
+                    " ON " + Table.USER.getTableName() + ".theme = " +
+                    Table.THEME.getTableName() + ".theme_name" +
+                    " ORDER BY user_id");
             while (rs.next()) {
                 users.add(new User(
                         rs.getInt(1),
                         rs.getString(2),
                         rs.getString(3),
-                        rs.getString(4)
+                        new Theme(
+                                rs.getString(4),
+                                rs.getString(5),
+                                rs.getBoolean(6)
+                        )
                 ));
             }
             commit("queryUsers");
@@ -440,6 +452,7 @@ class Database {
             printSQLException(sqle);
             cleanUp();
         }
+        System.out.println("max user is " + max);
         return max;
     }
 
@@ -451,13 +464,15 @@ class Database {
      */
     User getUserByUsername(String usernameInput) {
         PreparedStatement psQuery;
-        System.out.println("get by un " + usernameInput);
         User user = null;
         ResultSet rs;
         try {
             psQuery = conn.prepareStatement(
-                    "SELECT user_id, username, name, theme " +
+                    "SELECT user_id, username, name, theme, theme_file, theme_show " +
                             "FROM " + Table.USER.getTableName() +
+                            " LEFT JOIN " + Table.THEME.getTableName() +
+                            " ON " + Table.USER.getTableName() + ".theme = " +
+                            Table.THEME.getTableName() + ".theme_name" +
                             " WHERE username=?"
             );
             statements.add(psQuery);
@@ -467,11 +482,14 @@ class Database {
                 int user_id = rs.getInt(1);
                 String username = rs.getString(2);
                 String name = rs.getString(3);
-                String theme = rs.getString(4);
-                System.out.printf("So making %d %s %s %s", user_id, name, username, theme);
+                Theme theme = new Theme(
+                        rs.getString(4),
+                        rs.getString(5),
+                        rs.getBoolean(6)
+                );
                 user = new User(user_id, username, name, theme);
             }
-            commit("getUserByUsername");
+            commit("getUserByUsername " + usernameInput);
         } catch (SQLException sqle) {
             printSQLException(sqle);
             cleanUp();
@@ -492,8 +510,11 @@ class Database {
         ResultSet rs;
         try {
             psQuery = conn.prepareStatement(
-                    "SELECT user_id, username, name, theme " +
+                    "SELECT user_id, username, name, theme, theme_file, theme_show " +
                             "FROM " + Table.USER.getTableName() +
+                            " LEFT JOIN " + Table.THEME.getTableName() +
+                            " ON " + Table.USER.getTableName() + ".theme = " +
+                            Table.THEME.getTableName() + ".theme_name" +
                             " WHERE user_id=?"
             );
             statements.add(psQuery);
@@ -504,7 +525,11 @@ class Database {
                         rs.getInt(1),
                         rs.getString(2),
                         rs.getString(3),
-                        rs.getString(4)
+                        new Theme(
+                                rs.getString(4),
+                                rs.getString(5),
+                                rs.getBoolean(6)
+                        )
                 );
             }
             commit("getUserByID");
@@ -640,12 +665,13 @@ class Database {
         try {
             psInsert = conn.prepareStatement("insert into " +
                     Table.ROUTINE.getTableName() +
-                    " (routine_name, routine_user_id) values (?, ?)");
+                    " (routine_id, routine_name, routine_user_id) values (?, ?, ?)");
             statements.add(psInsert);
             // parameter 1 is routine_name (varchar),
             // parameter 2 is routine_user_id (int),
-            psInsert.setString(1, routine.getName());
-            psInsert.setInt(2, User.getSignedInUser().getID());
+            psInsert.setInt(1, routine.getID());
+            psInsert.setString(2, routine.getName());
+            psInsert.setInt(3, routine.getUserID());
             psInsert.executeUpdate();
             if (commitTransaction) {
                 commit("insertRoutine");
@@ -699,7 +725,7 @@ class Database {
         ResultSet rs;
         try {
             psQuery = conn.prepareStatement(
-                    "SELECT routine_id, routine_name " +
+                    "SELECT routine_id, routine_name, routine_user_id " +
                             "FROM " + Table.ROUTINE.getTableName() +
                             " WHERE routine_user_id=? " +
                             " ORDER BY routine_id"
@@ -711,7 +737,8 @@ class Database {
             while (rs.next()) {
                 routines.add(new Routine(
                         rs.getInt(1),
-                        rs.getString(2)
+                        rs.getString(2),
+                        rs.getInt(3)
                 ));
             }
             commit("queryRoutinesForUser");
@@ -734,7 +761,7 @@ class Database {
         ResultSet rs;
         try {
             psQuery = conn.prepareStatement(
-                    "SELECT routine_id, routine_name " +
+                    "SELECT routine_id, routine_name, routine_user_id " +
                             "FROM " + Table.ROUTINE.getTableName() +
                             " WHERE routine_id=?"
             );
@@ -744,10 +771,9 @@ class Database {
             if (rs.next()) {
                 int routine_id = rs.getInt(1);
                 String routine_name = rs.getString(2);
-                System.out.printf("So making %d %s", routine_id, routine_name);
-                routine = new Routine(routine_id, routine_name);
+                routine = new Routine(routine_id, routine_name, rs.getInt(3));
             }
-            commit("getRoutineByID");
+            commit("getRoutineByID " + idInput);
         } catch (SQLException sqle) {
             printSQLException(sqle);
             cleanUp();
@@ -774,6 +800,7 @@ class Database {
             printSQLException(sqle);
             cleanUp();
         }
+        System.out.println("max routine is " + max);
         return max;
     }
 
@@ -797,30 +824,6 @@ class Database {
     }
 
     /**
-     * Deletes a task from the database
-     *
-     * @param id                The id of the task to be deleted
-     * @param commitTransaction True to commit, false to skip commit
-     *                          Useful if transaction is in progress
-     */
-    private void deleteTask(int id, @SuppressWarnings("SameParameterValue") boolean commitTransaction) {
-        PreparedStatement psUpdate;
-        try {
-            psUpdate = conn.prepareStatement("DELETE FROM " +
-                    Table.TASK.getTableName() +
-                    " WHERE task_id=?");
-            psUpdate.setInt(1, id);
-            psUpdate.executeUpdate();
-            if (commitTransaction) {
-                commit("deleteTask");
-            }
-        } catch (SQLException sqle) {
-            printSQLException(sqle);
-            cleanUp();
-        }
-    }
-
-    /**
      * Insert a new task
      *
      * @param task              The task to insert
@@ -828,6 +831,7 @@ class Database {
      *                          Useful if transaction is in progress
      */
     private void insertTask(Task task, boolean commitTransaction) {
+        System.out.println(task.getID() + " " + task.getName() + " " + task.getRoutineID());
         PreparedStatement psInsert;
         PreparedStatement psInsertSubtype;
 
@@ -912,9 +916,9 @@ class Database {
         ResultSet rs;
         try {
             psQuery = conn.prepareStatement(
-                    "SELECT task_id, task_name, task_routine_id, task_minutes, task_active" +
+                    "SELECT Task.task_id, task_name, task_routine_id, task_minutes, task_active" +
                             " FROM " + Table.TASK.getTableName() +
-                            " JOIN " + Table.TIMED_TASK.getTableName() +
+                            " LEFT JOIN " + Table.TIMED_TASK.getTableName() +
                             " ON Task.task_id = TimedTask.task_id" +
                             " WHERE task_routine_id=? "
             );
@@ -958,11 +962,11 @@ class Database {
         ResultSet rs;
         try {
             psQuery = conn.prepareStatement(
-                    "SELECT task_id, task_name, task_routine_id, task_minutes, task_active " +
+                    "SELECT Task.task_id, task_name, task_routine_id, task_minutes, task_active " +
                             "FROM " + Table.TASK.getTableName() +
-                            " JOIN " + Table.TIMED_TASK.getTableName() +
+                            " LEFT JOIN " + Table.TIMED_TASK.getTableName() +
                             " ON Task.task_id = TimedTask.task_id" +
-                            " WHERE task_id=?"
+                            " WHERE Task.task_id=?"
             );
             statements.add(psQuery);
             psQuery.setInt(1, idInput);
@@ -973,7 +977,6 @@ class Database {
                 int task_routine_id = rs.getInt(3);
                 int task_minutes = rs.getInt(4);
                 boolean task_active = rs.getBoolean(5);
-                System.out.printf("So making %d %s", task_id, task_name);
                 // TODO: Distinguish timed and untimed
                 task = task_minutes > 0 ?
                         new TimedTask(task_id, task_name, task_routine_id, task_minutes, task_active) :
@@ -1006,20 +1009,9 @@ class Database {
             printSQLException(sqle);
             cleanUp();
         }
+        System.out.println("max task is " + max);
         return max;
     }
-
-
-    // Round Five...
-//    TIMED_TASK("TimedTask",
-//                       "task_id int, " +
-//                       "length int, " +
-//                       "primary key (task_id), " +
-//                       "foreign key (task_id) references Task (task_id)"),
-//    UNTIMED_TASK("UntimedTask",
-//                         "task_id int, " +
-//                         "primary key (task_id), " +
-//                         "foreign key (task_id) references Task (task_id)");
 
 
 }

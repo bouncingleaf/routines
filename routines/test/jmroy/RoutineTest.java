@@ -1,5 +1,6 @@
 package jmroy;
 
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -9,9 +10,15 @@ class RoutineTest {
     private Routine testRoutine;
     private final String TITLE = "Routine Title";
 
+    @BeforeAll
+    static void beforeAll() {
+        Database.createDb(true);
+    }
+
     @BeforeEach
     void beforeEach() {
-        testRoutine = new Routine(TITLE);
+        // User ID 0 is the admin user
+        testRoutine = new Routine(TITLE, 0);
     }
 
     /**

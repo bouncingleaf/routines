@@ -48,13 +48,14 @@ class User {
      * @param id The user's already existing ID
      * @param userName The user's chosen username
      * @param name The user's chosen name, or empty string to just use username
-     * @param themeName The name of the user's chosen theme
+     * @param theme The user's chosen theme
      */
-    User(int id, String userName, String name, String themeName) {
-        this(userName);
+    User(int id, String userName, String name, Theme theme) {
+        this.myRoutines = new ArrayList<>();
         this.id = id;
+        this.userName = userName;
         this.name = name.equals("") ? userName : name;
-        this.themePreference = Theme.getThemeByName(themeName);
+        this.themePreference = theme;
     }
 
     // Class Methods
@@ -63,7 +64,7 @@ class User {
         return Database.getDb().getMaxUserID() + 1;
     }
 
-    private static void setSignedInUser(User user) {
+    static void setSignedInUser(User user) {
         signedInUser = user;
     }
 
@@ -168,7 +169,7 @@ class User {
      */
     void save() {
         // TODO: This does not handle deletes properly! Fix
-        Database.getDb().saveExistingUser(this);
+        Database.getDb().saveUser(this);
     }
 
     Theme getThemePreference() {
