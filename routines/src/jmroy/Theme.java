@@ -8,10 +8,11 @@ public class Theme implements Serializable {
     static final Theme TEST = new Theme("TestName", "TestFile");
     static final Theme LIGHT = new Theme("Light", "LightTheme.css");
     static final Theme DARK = new Theme("Dark", "DarkTheme.css");
-    static final Theme DEFAULT = LIGHT;
-    static final Theme[] THEMES = {LIGHT, DARK};
+    static final Theme DEFAULT = new Theme("Default", "LightTheme.css");
+    static final Theme[] ALL_THEMES = {DEFAULT, TEST, LIGHT, DARK};
+    static final Theme[] THEMES_SHOWN = {LIGHT, DARK};
 
-    private Theme(String name, String filename) {
+    Theme(String name, String filename) {
         this.name = name;
         this.filename = filename;
     }

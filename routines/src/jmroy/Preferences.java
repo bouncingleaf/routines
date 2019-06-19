@@ -17,7 +17,7 @@ class Preferences {
 
         VBox prefsLayout = new VBox();
         ChoiceBox<Theme> choiceBox = new ChoiceBox<>();
-        choiceBox.getItems().addAll(Theme.THEMES);
+        choiceBox.getItems().addAll(Theme.THEMES_SHOWN);
         choiceBox.getSelectionModel().selectedItemProperty().addListener((
                 obs, oldVal, newVal) -> switchStylesheets(oldVal, newVal)
         );
@@ -34,8 +34,10 @@ class Preferences {
     }
 
     static void switchStylesheets(Theme oldVal, Theme newVal) {
-        User.getSignedInUser().setThemePreference(newVal);
-        User.getSignedInUser().save();
+        User user = User.getSignedInUser();
+        user.setThemePreference(newVal);
+        user.saveUserDataFile();
+        Database.getDb().upsertUser(user);
         if (Screen.getApplication() != null) {
             // No application when testing, so skip this
             Screen.updateStylesheets(oldVal, newVal);

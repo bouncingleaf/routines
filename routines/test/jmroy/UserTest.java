@@ -1,5 +1,6 @@
 package jmroy;
 
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
@@ -12,6 +13,11 @@ class UserTest {
     private final String NAME = "Test Name";
     private final String TEST_ROUTINE = "Test Routine";
     private User testUser;
+
+    @BeforeAll
+    static void beforeAll() {
+        Database.createDb(true);
+    }
 
     @BeforeEach
     void beforeEach() {
@@ -45,7 +51,6 @@ class UserTest {
     @Test
     void getData() {
         final String USER_TWO = USER + "2";
-        final String USER_THREE = USER + "3";
 
         // Test user constructed with two arguments, second argument non-empty
         assertEquals(USER, testUser.getUserName());
@@ -57,11 +62,6 @@ class UserTest {
         assertEquals(USER_TWO, testTwo.getUserName());
         assertEquals(USER_TWO, testTwo.getName());
 
-        // Test user constructed with no second argument
-        // userName should equal name
-        User testThree = new User(USER_THREE);
-        assertEquals(USER_THREE, testThree.getUserName());
-        assertEquals(USER_THREE, testThree.getName());
     }
 
     @Test
@@ -70,10 +70,10 @@ class UserTest {
         Routine testRoutine = new Routine(TEST_ROUTINE);
         testRoutine.addTask(new TimedTask("Example", 30));
         saveTest.addRoutine(testRoutine);
-        saveTest.save();
+        saveTest.saveUserDataFile();
         saveTest = new User(User.TEST_USER + "overwritten", "Should be overwritten");
         assertEquals("Should be overwritten", saveTest.getName());
-        saveTest = User.load(User.TEST_USER);
+        saveTest = User.loadFromDataFile(User.TEST_USER);
         assertNotNull(saveTest);
         assertEquals(User.TEST_USER, saveTest.getUserName());
         assertEquals("Saved Test", saveTest.getName());

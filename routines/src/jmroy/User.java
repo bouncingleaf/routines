@@ -2,11 +2,11 @@ package jmroy;
 
 import java.io.*;
 import java.util.ArrayList;
-import java.util.Scanner;
 
 /**
  * User class - manages the user's info including their routines
  * Also responsible for loading/saving user data to storage.
+ *
  * @author Jessica Roy
  */
 class User implements Serializable {
@@ -18,63 +18,76 @@ class User implements Serializable {
             + "files"
             + System.getProperty("file.separator");
 
-    private static final String USERS_FILE = FILE_DIR + "ALL_USERS";
     // Usernames may not begin with this string - reserved for unit testing
     static final String TEST_USER = "junittest";
 
 
     // Instance variables
 
+    private int id;
     private ArrayList<Routine> myRoutines;
     private String name;
     private String userName;
     private Theme themePreference = Theme.DEFAULT;
 
     // Constructors
-    
-    private User()
-    {
-        this.myRoutines = new ArrayList<>();
-    }
 
+    /**
+     * Constructor for building a new user with the default theme
+     *
+     * @param userName The user's chosen username
+     * @param name     The user's chosen name, or empty string to just use username
+     */
     User(String userName, String name) {
-        this();
+        this.myRoutines = new ArrayList<>();
         this.userName = userName;
         this.name = name.equals("") ? userName : name;
     }
 
-    User(String userName) {
-        this(userName, "");
+    /**
+     * Constructor for loading existing an existing user from the database
+     *
+     * @param id       The user's already existing ID
+     * @param userName The user's chosen username
+     * @param name     The user's chosen name, or empty string to just use username
+     * @param theme    The user's chosen theme
+     */
+    User(int id, String userName, String name, Theme theme) {
+        this(userName, name);
+        this.id = id;
+        this.themePreference = theme;
     }
-
     // Class Methods
 
     private static void setSignedInUser(User user) {
         signedInUser = user;
     }
+
     static User getSignedInUser() {
         return signedInUser;
     }
 
     static User createNewUser(String userName) {
-        File usersFile = new File(User.USERS_FILE);
-        try (
-                PrintWriter userWriter = new PrintWriter(new FileOutputStream(usersFile, true))
-        ) {
-            User newUser = new User(userName);
+        User newUser = new User(userName, "");
 
-            // Save username to the users file
-            userWriter.println(newUser.getUserName());
+        // Save user object to database
+        Database.getDb().insertUser(newUser);
 
-            newUser.save();
-            return newUser;
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-            return null;
+        // File ID back to user in memory
+        Integer newID = Database.getDb().getUserIDByUsername(newUser.getUserName());
+        if (newID == null) {
+            System.out.println("problem getting id");
+        } else {
+            newUser.setID(newID);
         }
+
+        // Save user's own personal data file
+        newUser.saveUserDataFile();
+
+        return newUser;
     }
 
-    static String userNamePurify(String name){
+    static String userNamePurify(String name) {
         return name.toLowerCase().replaceAll("[^a-z0-9]", "");
     }
 
@@ -82,10 +95,14 @@ class User implements Serializable {
         String name = userNamePurify(nameInput);
         if (name.length() > 0) {
             if (userFound(name)) {
-                setSignedInUser(User.load(name));
+                User loadedUser = User.loadFromDataFile(name);
+                System.out.println("Setting to loaded user: " + loadedUser);
+                setSignedInUser(loadedUser);
                 return Screen.Pages.MAIN;
             } else {
-                setSignedInUser(User.createNewUser(name));
+                User createdUser = User.createNewUser(name);
+                System.out.println("Setting to created user: " + createdUser);
+                setSignedInUser(createdUser);
                 return Screen.Pages.NAME;
             }
         } else {
@@ -96,59 +113,37 @@ class User implements Serializable {
     }
 
     static void signUp(String nameInput) {
-        String name = nameInput.replaceAll("[^a-zA-Z0-9\']"," ");
-        getSignedInUser().setName( name.length() > 0 ? name : User.getSignedInUser().getUserName());
-        getSignedInUser().save();
+        String name = nameInput.replaceAll("[^a-zA-Z0-9\']", " ");
+        getSignedInUser().setName(name.length() > 0 ? name : User.getSignedInUser().getUserName());
+        getSignedInUser().saveUserDataFile();
     }
 
-
-    /**
-     * Get or create the User whose routines we want to work with
-     * @param userName String of the user name to look for
-     * @return true if the user is found, false if not
-     */
-     static boolean userFound(String userName) {
-        // Open the users file, establish a reader, and get the user
-        File usersFile = new File(User.USERS_FILE);
-        try (
-                Scanner userReader = usersFile.exists() ? new Scanner(usersFile) : null
-        ) {
-            boolean found = false;
-            // If we have a username, look for it in the users file
-            if (userName != null && userReader != null) {
-                while (userReader.hasNextLine() && !found) {
-                    found = userReader.nextLine().equals(userName);
-                }
-            }
-            return found;
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-            return false;
-        }
+    static boolean userFound(String username) {
+        return Database.getDb().usernameInDatabase(username);
     }
 
     /**
      * Loads a User object by reading and deserializing it from a user data file.
+     *
      * @param userName The userName of the User to load.
      * @return The User object loaded from the file.
      */
-    static User load (String userName) {
+    static User loadFromDataFile(String userName) {
+        System.out.println("Loading " + userName);
         final String USER_FILE = FILE_DIR + "USER_" + userName;
         try (FileInputStream fileInputStream = new FileInputStream(USER_FILE)) {
             ObjectInputStream objectInputStream = new ObjectInputStream((fileInputStream));
             return (User) objectInputStream.readObject();
-        }
-        catch (InvalidClassException e) {
+        } catch (InvalidClassException e) {
             // Users should not see this...
             System.out.println("Classes have changed, try clearing the files.");
             return null;
-        }
-        catch (FileNotFoundException e) {
+        } catch (FileNotFoundException e) {
             System.out.println("Uh oh, no file found for this user " + userName);
             return null;
-        }
-        catch (ClassNotFoundException | IOException e) {
+        } catch (ClassNotFoundException | IOException e) {
             e.printStackTrace();
+            System.out.println("Something else has gone wrong loading " + userName);
             return null;
         }
     }
@@ -162,10 +157,10 @@ class User implements Serializable {
 
     /**
      * Gets all the routines for this user.
+     *
      * @return An ArrayList of all the user's routines.
      */
-    ArrayList<Routine> getMyRoutines()
-    {
+    ArrayList<Routine> getMyRoutines() {
         return myRoutines;
     }
 
@@ -173,13 +168,19 @@ class User implements Serializable {
         this.myRoutines = myRoutines;
     }
 
-    void addRoutine(Routine routine)
-    {
+    void addRoutine(Routine routine) {
         myRoutines.add(routine);
     }
 
-    String getName()
-    {
+    int getID() {
+        return id;
+    }
+
+    void setID(int id) {
+        this.id = id;
+    }
+
+    String getName() {
         return name;
     }
 
@@ -187,8 +188,7 @@ class User implements Serializable {
         this.name = name;
     }
 
-    String getUserName()
-    {
+    String getUserName() {
         return userName;
     }
 
@@ -204,15 +204,14 @@ class User implements Serializable {
     /**
      * Serializes the User object and saves the data to a file specific to that user.
      */
-    void save () {
+    void saveUserDataFile() {
         final String USER_FILE = FILE_DIR + "USER_" + this.getUserName();
         try (FileOutputStream fileOutputStream = new FileOutputStream(USER_FILE)) {
             ObjectOutputStream objectOutputStream = new ObjectOutputStream(fileOutputStream);
             objectOutputStream.writeObject(this);
             objectOutputStream.flush();
             objectOutputStream.close();
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             System.out.println("problem saving data");
             e.printStackTrace();
         }

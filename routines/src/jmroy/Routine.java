@@ -184,7 +184,7 @@ class Routine implements Serializable {
             myRoutines.set(myRoutines.indexOf(selectedRoutine),newRoutine);
             user.setMyRoutines(myRoutines);
         }
-        user.save();
+        user.saveUserDataFile();
     }
 
     /**
