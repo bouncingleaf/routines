@@ -31,7 +31,6 @@ class Routine implements Serializable {
     private String title = "My Routine";
     private ArrayList<Task> tasks;
     private int id;
-    private int userID;
 
     // Constructors
 
@@ -48,10 +47,9 @@ class Routine implements Serializable {
      * Constructor for new routine prior to saving
      * @param title The title of the routine
      */
-    Routine(String title, int userID) {
+    Routine(String title) {
         this();
         this.title = title;
-        this.userID = userID;
     }
 
     /**
@@ -59,11 +57,9 @@ class Routine implements Serializable {
      * @param id The id of the routine in the database
      * @param title The title of the routine
      */
-    Routine(int id, String title, int userID) {
-        this.title = title;
-        this.tasks = new ArrayList<>();
+    Routine(int id, String title) {
+        this(title);
         this.id = id;
-        this.userID = userID;
     }
 
     // Class methods
@@ -205,11 +201,7 @@ class Routine implements Serializable {
     private static void saveAll(ObservableList<Task> myTasks) {
         User user = User.getSignedInUser();
         String routineName = routineNameTextField.getText();
-        Routine newRoutine = new Routine(
-                routineName.length() > 0 ? routineName : "My Routine",
-                User.getSignedInUser().getID()
-        );
-
+        Routine newRoutine = new Routine(routineName.length() > 0 ? routineName : "My Routine");
         myTasks.forEach(newRoutine::addTask);
         if (selectedRoutine == null) {
             user.addRoutine(newRoutine);
@@ -277,9 +269,13 @@ class Routine implements Serializable {
         return id;
     }
 
-    int getUserID() {
-        return userID;
-    }
+//    public void setID(int id) { this.id = id; }
+
+//    int getUserID() {
+//        return user_id;
+//    }
+
+//    public void setUserID(int id) { this.user_id = id; }
 
     public String getName() {
         return title;

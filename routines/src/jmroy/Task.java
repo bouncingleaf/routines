@@ -21,6 +21,7 @@ abstract class Task implements Serializable {
      * @param name The name of the Task
      */
     Task(String name, int routineID) {
+        // This is a terrible way to assign a unique ID but it will do for now
         this.id = getNewTaskID();
         this.name = name;
         this.routineID = routineID;

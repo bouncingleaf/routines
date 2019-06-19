@@ -35,7 +35,7 @@ class UserTest {
         assert(testList.isEmpty());
 
         // Test adding a routine
-        Routine testRoutine = new Routine(TEST_ROUTINE, testUser.getID());
+        Routine testRoutine = new Routine(TEST_ROUTINE);
         testUser.addRoutine(testRoutine);
         // Confirm that one was added
         assertEquals(1, testUser.getMyRoutines().size());
@@ -66,7 +66,7 @@ class UserTest {
     @Test
     void testSaveAndLoad() {
         User saveTest = new User(User.TEST_USER, "Saved Test");
-        Routine testRoutine = new Routine(TEST_ROUTINE, testUser.getID());
+        Routine testRoutine = new Routine(TEST_ROUTINE);
         testRoutine.addTask(new TimedTask("Example", testRoutine.getID(),30));
         saveTest.addRoutine(testRoutine);
         saveTest.save();
