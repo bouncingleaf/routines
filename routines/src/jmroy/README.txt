@@ -1,13 +1,9 @@
-This is Jessica Roy's Assignment 5 for Advanced Programming Techniques
+This is Jessica Roy's Assignment 1 for Advanced Programming Techniques
 Boston University MET CS 622, online, Summer 1 2019
 
-Setting up for the application:
+Running this application:
 
-1. Start Derby using the startNetworkServer command from the derby bin folder.
-2. Run the main method of the Database.java class. You'll only need to do this once.
-   It will build all the tables and insert themes into the Theme table.
-
-Running the application:
+I was able to run this application in one of two ways:
 
 1. From IntelliJ, using the Run function on the RoutinesApp class
 2. From the command line, in the routines\routines\bin folder:
@@ -47,3 +43,6 @@ Interacting with the application:
    You can choose Light or Dark and it will save automatically for the user.
    Sign out, sign back in - the theme should be retained.
    Light is the default theme.
+
+
+

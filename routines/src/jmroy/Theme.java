@@ -11,7 +11,6 @@ public class Theme implements Serializable {
     static final Theme LIGHT = new Theme("Light", "LightTheme.css", true);
     static final Theme DARK = new Theme("Dark", "DarkTheme.css", true);
     static final Theme DEFAULT = new Theme("Default", "LightTheme.css", false);
-    static final Theme[] ALL_THEMES = {TEST, LIGHT, DARK, DEFAULT};
 
     Theme(String name, String filename, boolean show) {
         this.name = name;
@@ -19,16 +18,19 @@ public class Theme implements Serializable {
         this.showTheme = show;
     }
 
+//    static void addThemesToDatabase() {
+//        Database.getDb().insertTheme(TEST);
+//        Database.getDb().insertTheme(LIGHT);
+//        Database.getDb().insertTheme(DARK);
+//        Database.getDb().insertTheme(DEFAULT);
+//    }
+
     static Theme getThemeByName(String name) {
         return Database.getDb().getTheme(name);
     }
 
-    static ArrayList<Theme> getAllThemes() {
-        return Database.getDb().queryThemes();
-    }
-
-    static ArrayList<Theme> getShownThemes() {
-        ArrayList<Theme> themes = getAllThemes();
+    static ArrayList<Theme> getShowableThemes() {
+        ArrayList<Theme> themes = Database.getDb().queryThemes();
         themes.removeIf(Theme::getShowTheme);
         return themes;
     }

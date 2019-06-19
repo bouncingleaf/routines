@@ -1,6 +1,5 @@
 package jmroy;
 
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
@@ -13,11 +12,6 @@ class UserTest {
     private final String NAME = "Test Name";
     private final String TEST_ROUTINE = "Test Routine";
     private User testUser;
-
-    @BeforeAll
-    static void beforeAll() {
-        Database.createDb(true);
-    }
 
     @BeforeEach
     void beforeEach() {
@@ -76,7 +70,7 @@ class UserTest {
         assertNotNull(saveTest);
         assertEquals(User.TEST_USER, saveTest.getUserName());
         assertEquals("Saved Test", saveTest.getName());
-//        assertEquals(1, saveTest.getMyRoutines().size());
+        assertEquals(1, saveTest.getMyRoutines().size());
     }
 
     @Test
