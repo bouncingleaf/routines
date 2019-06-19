@@ -13,27 +13,13 @@ class TimedTask extends Task implements Serializable {
 
     // Constructors
 
-    /**
-     * Constructor for new TimedTask (always active, etc.)
-     * @param name
-     * @param routineID
-     * @param minutes
-     */
-    TimedTask(String name, int routineID, int minutes) {
+    TimedTask(String name, long routineID, int minutes) {
         super(name, routineID);
         this.minutes = minutes;
     }
 
-    /**
-     * Constructor for existing TimedTasks
-     * @param id
-     * @param name
-     * @param routineID
-     * @param minutes
-     * @param active
-     */
-    TimedTask(int id, String name, int routineID, int minutes, boolean active) {
-        super(id, name, routineID, active);
+    TimedTask(long id, String name, long routineID, int minutes) {
+        super(id, name, routineID);
         this.minutes = minutes;
     }
 

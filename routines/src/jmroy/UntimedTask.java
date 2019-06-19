@@ -8,25 +8,13 @@ import java.io.Serializable;
 class UntimedTask extends Task implements Serializable {
 
     // Constructors
-
-    /**
-     * Constructor for new UntimedTask
-     * @param name
-     * @param routineID
-     */
-    UntimedTask(String name, int routineID) {
+    
+    UntimedTask(String name, long routineID) {
         super(name, routineID);
     }
 
-    /**
-     * Constructor for existing TimedTask
-     * @param id
-     * @param name
-     * @param routineID
-     * @param active
-     */
-    UntimedTask(int id, String name, int routineID, boolean active) {
-        super(id, name, routineID, active);
+    UntimedTask(long id, String name, long routineID) {
+        super(id, name, routineID);
     }
 
     // Methods
