@@ -17,7 +17,7 @@ class Preferences {
 
         VBox prefsLayout = new VBox();
         ChoiceBox<Theme> choiceBox = new ChoiceBox<>();
-        choiceBox.getItems().addAll(Theme.getShowableThemes());
+        choiceBox.getItems().addAll(Theme.THEMES);
         choiceBox.getSelectionModel().selectedItemProperty().addListener((
                 obs, oldVal, newVal) -> switchStylesheets(oldVal, newVal)
         );

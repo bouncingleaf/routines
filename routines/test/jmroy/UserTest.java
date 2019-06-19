@@ -45,6 +45,7 @@ class UserTest {
     @Test
     void getData() {
         final String USER_TWO = USER + "2";
+        final String USER_THREE = USER + "3";
 
         // Test user constructed with two arguments, second argument non-empty
         assertEquals(USER, testUser.getUserName());
@@ -55,6 +56,12 @@ class UserTest {
         User testTwo = new User(USER_TWO, "");
         assertEquals(USER_TWO, testTwo.getUserName());
         assertEquals(USER_TWO, testTwo.getName());
+
+        // Test user constructed with no second argument
+        // userName should equal name
+        User testThree = new User(USER_THREE);
+        assertEquals(USER_THREE, testThree.getUserName());
+        assertEquals(USER_THREE, testThree.getName());
     }
 
     @Test
@@ -92,6 +99,7 @@ class UserTest {
         if (page == Screen.Pages.NAME) {
             User.signUp(name);
         }
+        assertTrue(User.userFound(username));
         assertEquals(username, User.getSignedInUser().getUserName());
         assertEquals(name, User.getSignedInUser().getName());
     }
@@ -99,8 +107,9 @@ class UserTest {
     @Test
     void testCreateAndFound() {
         String username = User.userNamePurify(User.TEST_USER + UUID.randomUUID());
-        User newUser = new User(username, username);
+        User newUser = User.createNewUser(username);
         assertNotNull(newUser);
         assertEquals(username, newUser.getUserName());
+        assertTrue(User.userFound(username));
     }
 }
