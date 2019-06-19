@@ -16,7 +16,7 @@ class TimedTaskTest {
 
     @BeforeEach
     void beforeEach() {
-        testTask = new TimedTask(NAME, -1, MINUTES);
+        testTask = new TimedTask(NAME, MINUTES);
     }
 
     @Test

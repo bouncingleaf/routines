@@ -16,8 +16,8 @@ class TaskTest {
     void beforeEach() {
         tasks = new ArrayList<>();
         // Implicit upcasting of TimedTask and UntimedTask to parent Task class
-        tasks.add(new TimedTask(TIMED_NAME, -1, 4));
-        tasks.add(new UntimedTask(UNTIMED_NAME, -1));
+        tasks.add(new TimedTask(TIMED_NAME, 4));
+        tasks.add(new UntimedTask(UNTIMED_NAME));
     }
 
     @Test

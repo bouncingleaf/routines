@@ -15,7 +15,7 @@ class User {
     static final String TEST_USER = "junittest";
 
     // Instance variables
-    private long id;
+    private int id;
     private ArrayList<Routine> myRoutines;
     private String name;
     private String userName;
@@ -27,8 +27,6 @@ class User {
      */
     private User(String userName)
     {
-        // This is a terrible way to assign a unique ID but it will do for now
-        this.id = System.currentTimeMillis();
         this.myRoutines = new ArrayList<>();
         this.userName = userName;
     }
@@ -40,17 +38,18 @@ class User {
      */
     User(String userName, String name) {
         this(userName);
+        // Poor id choice for a production system, but it should work for now
         this.name = name.equals("") ? userName : name;
     }
 
     /**
      * Constructor for loading existing an existing user from the database
-     * @param id The user's already existing ID
      * @param userName The user's chosen username
      * @param name The user's chosen name, or empty string to just use username
      * @param themeName The name of the user's chosen theme
+     * @param id The user's already existing ID
      */
-    User(long id, String userName, String name, String themeName) {
+    User(int id, String userName, String name, String themeName) {
         this(userName);
         this.id = id;
         this.name = name.equals("") ? userName : name;
@@ -91,22 +90,11 @@ class User {
     static void signUp(String nameInput) {
         String name = nameInput.replaceAll("[^a-zA-Z0-9\']"," ");
         getSignedInUser().setName( name.length() > 0 ? name : User.getSignedInUser().getUserName());
+        getSignedInUser().save();
     }
 
     static User load(String username) {
-        User user = Database.getDb().getUserByUsername(username);
-        if (user != null) {
-            user.setMyRoutines(user.loadRoutines());
-        }
-        return user;
-    }
-
-    private ArrayList<Routine> loadRoutines() {
-        ArrayList<Routine> routines = Database.getDb().queryRoutinesForUser(this);
-        for(Routine routine : routines) {
-            routine.loadTasks();
-        }
-        return routines;
+        return Database.getDb().getUserByUsername(username);
     }
 
     static String getStylesheet() {
@@ -116,7 +104,7 @@ class User {
 
     // Instance Methods
 
-    long getID () { return id; }
+    int getId () { return id; }
 
     /**
      * Gets all the routines for this user.
@@ -158,13 +146,10 @@ class User {
         this.myRoutines = new ArrayList<>();
     }
 
-    /**
-     * Saves the user, the user's routines, and the user's routines' tasks
-     * to the database
-     */
     void save() {
-        // TODO: This does not handle deletes properly! Fix
-        Database.getDb().saveExistingUser(this);
+        System.out.println("save in " + this);
+        Database.getDb().upsertUser(this);
+        System.out.println("save out");
     }
 
     Theme getThemePreference() {

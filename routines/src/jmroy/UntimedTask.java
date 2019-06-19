@@ -9,12 +9,8 @@ class UntimedTask extends Task implements Serializable {
 
     // Constructors
     
-    UntimedTask(String name, long routineID) {
-        super(name, routineID);
-    }
-
-    UntimedTask(long id, String name, long routineID) {
-        super(id, name, routineID);
+    UntimedTask(String name) {
+        super(name);
     }
 
     // Methods

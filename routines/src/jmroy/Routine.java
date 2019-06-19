@@ -30,36 +30,16 @@ class Routine implements Serializable {
 
     private String title = "My Routine";
     private ArrayList<Task> tasks;
-    private long id;
 
     // Constructors
-
-    /**
-     * Base constructor
-     */
+    
     private Routine() {
-        // This is a terrible way to assign a unique ID but it will do for now
-        this.id = System.currentTimeMillis();
         this.tasks = new ArrayList<>();
     }
 
-    /**
-     * Constructor for new routine prior to saving
-     * @param title The title of the routine
-     */
     Routine(String title) {
         this();
         this.title = title;
-    }
-
-    /**
-     * Constructor for existing routines loaded from database
-     * @param id The id of the routine in the database
-     * @param title The title of the routine
-     */
-    Routine(long id, String title) {
-        this(title);
-        this.id = id;
     }
 
     // Class methods
@@ -166,9 +146,7 @@ class Routine implements Serializable {
             } catch (NumberFormatException exception) {
                 taskLength = 0;
             }
-            Task newTask = taskLength > 0 ?
-                    new TimedTask(taskName, selectedRoutine.getID(), taskLength) :
-                    new UntimedTask(taskName, selectedRoutine.getID());
+            Task newTask = taskLength > 0 ? new TimedTask(taskName, taskLength) : new UntimedTask(taskName);
             if (selectedTask == null) {
                 myTasks.add(newTask);
             } else {
@@ -259,19 +237,8 @@ class Routine implements Serializable {
         return Screen.getAScene(runLayout);
     }
 
+
     // Methods
-
-    long getID() {
-        return id;
-    }
-
-//    public void setID(int id) { this.id = id; }
-
-//    int getUserID() {
-//        return user_id;
-//    }
-
-//    public void setUserID(int id) { this.user_id = id; }
 
     public String getName() {
         return title;
@@ -287,16 +254,7 @@ class Routine implements Serializable {
         this.tasks.add(task);
     }
 
-    ArrayList<Task> getTasks() { return tasks; }
-
-    void loadTasks() {
-        ArrayList<Task> tasks = Database.getDb().queryTasksForRoutine(this);
-        setTasks(tasks);
-    }
-
-    private void setTasks(ArrayList<Task> tasks) {
-        this.tasks = tasks;
-    }
+    private ArrayList<Task> getTasks() { return tasks; }
 
     @Override
     public String toString() {

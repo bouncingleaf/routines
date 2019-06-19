@@ -1,12 +1,6 @@
 package jmroy;
 
-/* Class Database (originally based on SimpleApp.java from Apache's Derby demo)
- *
- * This program will will try to connect to a network server on this
- * host (the localhost). Creates a database by making a connection to
- * Derby (automatically loading the driver).
- */
-
+/* Class Database (originally based on SimpleApp.java from Apache's Derby demo) */
 
 import java.sql.*;
 
@@ -37,43 +31,18 @@ class Database {
     enum Table {
         // Round One: Tables with no foreign keys
         THEME("Theme",
-                "theme_name varchar(20) not null, " +
-                        "theme_file varchar(30) not null, " +
-                        "theme_show boolean, " +
-                        "primary key (theme_name)"),
+                "name varchar(20) not null, " +
+                        "filename varchar(30) not null, " +
+                        "showTheme boolean, " +
+                        "primary key (name)"),
         // Round Two: Tables with only foreign keys from round one
         USER("UserTable",
-                "user_id bigint not null, " +
+                "user_id int not null generated always as identity, " +
                         "username varchar(30), " +
                         "name varchar(50), " +
                         "theme varchar(20), " +
                         "primary key (user_id), " +
-                        "foreign key (theme) references Theme (theme_name)"),
-        // Round Three: Tables with only foreign keys from 1 and 2;
-        ROUTINE("Routine",
-                "routine_id bigint not null, " +
-                        "routine_name varchar(255)," +
-                        "routine_user_id bigint, " +
-                        "primary key (routine_id), " +
-                        "foreign key (routine_user_id) references UserTable (user_id)"),
-        // Round Four: Tables with only foreign keys from rounds 1-3
-        TASK("Task",
-                "task_id bigint not null, " +
-                        "task_name varchar(255), " +
-                        "task_type varchar(10), " +
-                        "task_routine_id bigint, " +
-                        "primary key (task_id), " +
-                        "foreign key (task_routine_id) references Routine (routine_id)"),
-        // Round Five...
-        TIMED_TASK("TimedTask",
-                "task_id bigint, " +
-                        "length int, " +
-                        "primary key (task_id), " +
-                        "foreign key (task_id) references Task (task_id)"),
-        UNTIMED_TASK("UntimedTask",
-                "task_id bigint, " +
-                        "primary key (task_id), " +
-                        "foreign key (task_id) references Task (task_id)");
+                        "foreign key (theme) references Theme (name)");
 
         private final String name;
         private final String definition;
@@ -102,12 +71,21 @@ class Database {
         currentDatabase = new Database(test);
     }
 
-    /* Statement and PreparedStatement objects, Connections, and ResultSets
-     * are resources that should be released explicitly after use.
+    /* We will be using Statement and PreparedStatement objects for
+     * executing SQL. These objects, as well as Connections and ResultSets,
+     * are resources that should be released explicitly after use, hence
+     * the try-catch-finally pattern used below.
      */
     private Connection conn = null;
     private ArrayList<Statement> statements = new ArrayList<>(); // list of Statements, PreparedStatements
     private Statement s;
+
+    /*
+     * This program will will try to connect to a network server on this
+     * host (the localhost).
+     * Creates a database by making a connection to Derby (automatically loading
+     * the driver)
+     */
 
     /**
      * The initialization of the database. Should only need to do this once.
@@ -116,7 +94,7 @@ class Database {
      * @param args Arguments, ignored
      */
     public static void main(String[] args) {
-        // Should only need to do this once, unless databases are deleted
+        // Should only need to do this once
         Database db = new Database(true);
         db.createTables();
         db = new Database(false);
@@ -187,6 +165,19 @@ class Database {
         }
     }
 
+//    private void dropTables() {
+//        try{
+//            Table[] tables = Table.values();
+//            for (int i = tables.length - 1; i > 0; i--) {
+//                s.execute("drop table " + tables[i].getTableName());
+//            }
+//            commit("dropped tables");
+//        } catch (SQLException sqle) {
+//            printSQLException(sqle);
+//            cleanUp();
+//        }
+//    }
+
     private void cleanUp() {
         // release all open resources to avoid unnecessary memory usage
         System.out.println("Cleanup is happening...");
@@ -253,61 +244,15 @@ class Database {
      * User table methods
      *----------------------------------------------------------------------*/
 
-    /**
-     * Insert a user if it's a new user; update if it's an existing user
-     * And save the user's routines, and the routines' tasks
-     * @param user The user to insert or update
-     */
-    void saveExistingUser(User user) {
+    void upsertUser(User user) {
         if (getUserByUsername(user.getUserName()) == null) {
-            insertUser(user, false);
-            for (Routine routine : user.getMyRoutines()) {
-                insertRoutine(routine,false);
-                for (Task task : routine.getTasks()) {
-                    insertTask(task, false);
-                }
-            }
+            insertUser(user);
         } else {
-            // Users can't delete a routine at this time
-            // So all routines are either new or updated
-            for (Routine routine : user.getMyRoutines()) {
-                // Users CAN delete a task from a routine
-                ArrayList<Task> savedTasks = queryTasksForRoutine(routine);
-                for (Task task : routine.getTasks()) {
-                    savedTasks.removeIf(t -> (t.getID() == task.getID()));
-                    upsertTask(task, false);
-                }
-                for (Task task : savedTasks) {
-                    // Anything left is no longer in the routine's task list
-                    deleteTask(task.getID(), false);
-                }
-                upsertRoutine(routine, false);
-            }
-            updateUser(user, false);
+            updateUser(user);
         }
     }
 
-    /**
-     * Insert a User if it's a new User; update if it's an existing User
-     *
-     * @param user The User to insert or update
-     */
-    void upsertUserAndCommit(User user) {
-        if (getUserByID(user.getID()) == null) {
-            insertUser(user, true);
-        } else {
-            updateUser(user, true);
-        }
-    }
-
-    /**
-     * Insert a new user
-     *
-     * @param user              The user to insert
-     * @param commitTransaction True to commit, false to skip commit
-     *                          Useful if transaction is in progress
-     */
-    void insertUser(User user, boolean commitTransaction) {
+    void insertUser(User user) {
         PreparedStatement psInsert;
 
         try {
@@ -315,30 +260,21 @@ class Database {
             // parameter 2 is name (varchar),
             // parameter 3 is theme (varchar)
             psInsert = conn.prepareStatement("insert into " +
-                    Table.USER.getTableName() +
-                    " (username, name, theme) values (?, ?, ?)");
+                            Table.USER.getTableName() +
+                            " (username, name, theme) values (?, ?, ?)");
             statements.add(psInsert);
             psInsert.setString(1, user.getUserName());
             psInsert.setString(2, user.getName());
             psInsert.setString(3, user.getThemePreference().getName());
             psInsert.executeUpdate();
-            if (commitTransaction) {
-                commit("insert user " + user.getName());
-            }
+            commit("insert user " + user.getName());
         } catch (SQLException sqle) {
             printSQLException(sqle);
             cleanUp();
         }
     }
 
-    /**
-     * Update an existing user
-     *
-     * @param user              The user to update
-     * @param commitTransaction True to commit, false to skip commit
-     *                          Useful if transaction is in progress
-     */
-    void updateUser(User user, boolean commitTransaction) {
+    void updateUser(User user) {
         System.out.println("update in");
         PreparedStatement psUpdate;
         try {
@@ -352,11 +288,9 @@ class Database {
             psUpdate.setString(1, user.getUserName());
             psUpdate.setString(2, user.getName());
             psUpdate.setString(3, user.getThemePreference().getName());
-            psUpdate.setLong(4, user.getID());
+            psUpdate.setInt(4, user.getId());
             psUpdate.executeUpdate();
-            if (commitTransaction) {
-                commit("update user's name for " + user.getID() + " to " + user.getName());
-            }
+            commit("update user's name for " + user.getId() + " to " + user.getName());
         } catch (SQLException sqle) {
             printSQLException(sqle);
             cleanUp();
@@ -364,11 +298,6 @@ class Database {
         System.out.println("update out");
     }
 
-    /**
-     * Get a list of all users
-     *
-     * @return An ArrayList of all users
-     */
     ArrayList<User> queryUsers() {
         ArrayList<User> users = new ArrayList<>();
         ResultSet rs;
@@ -377,7 +306,7 @@ class Database {
                     " FROM " + Table.USER.getTableName() + " ORDER BY user_id");
             while (rs.next()) {
                 users.add(new User(
-                        rs.getLong(1),
+                        rs.getInt(1),
                         rs.getString(2),
                         rs.getString(3),
                         rs.getString(4)
@@ -391,12 +320,6 @@ class Database {
         return users;
     }
 
-    /**
-     * Get a user based on their username
-     *
-     * @param usernameInput The username of the user to get
-     * @return The User corresponding to that username
-     */
     User getUserByUsername(String usernameInput) {
         PreparedStatement psQuery;
         System.out.println("get by un " + usernameInput);
@@ -412,7 +335,7 @@ class Database {
             psQuery.setString(1, usernameInput);
             rs = psQuery.executeQuery();
             if (rs.next()) {
-                long user_id = rs.getLong(1);
+                int user_id = rs.getInt(1);
                 String username = rs.getString(2);
                 String name = rs.getString(3);
                 String theme = rs.getString(4);
@@ -427,59 +350,17 @@ class Database {
         return user;
     }
 
-    /**
-     * Get a user based on their ID
-     *
-     * @param idInput The ID of the user to get
-     * @return The User corresponding to that ID
-     */
-    private User getUserByID(long idInput) {
-        System.out.println("input is " + idInput);
-        PreparedStatement psQuery;
-        User user = null;
-        ResultSet rs;
-        try {
-            psQuery = conn.prepareStatement(
-                    "SELECT user_id, username, name, theme " +
-                            "FROM " + Table.USER.getTableName() +
-                            " WHERE user_id=?"
-            );
-            statements.add(psQuery);
-            psQuery.setLong(1, idInput);
-            rs = psQuery.executeQuery();
-            if (rs.next()) {
-                user = new User(
-                        rs.getLong(1),
-                        rs.getString(2),
-                        rs.getString(3),
-                        rs.getString(4)
-                );
-            }
-            commit("getUserByID");
-        } catch (SQLException sqle) {
-            printSQLException(sqle);
-            cleanUp();
-        }
-        return user;
-    }
-
     /*----------------------------------------------------------------------*
      * Theme table methods
      *----------------------------------------------------------------------*/
 
-    /**
-     * Insert a new theme into the database.
-     * For now, themes are only built by the application.
-     *
-     * @param theme The Theme to insert
-     */
     private void insertTheme(Theme theme) {
         PreparedStatement psInsert;
 
         try {
-            // parameter 1 is theme_name (varchar),
-            // parameter 2 is theme_file (varchar),
-            // parameter 3 is theme_show (boolean)
+            // parameter 1 is name (varchar),
+            // parameter 2 is filename (varchar),
+            // parameter 3 is showTheme (boolean)
             psInsert = conn.prepareStatement(
                     "insert into " + Table.THEME.getTableName() + " values (?, ?, ?)");
             statements.add(psInsert);
@@ -494,19 +375,13 @@ class Database {
         }
     }
 
-    /**
-     * Get a Theme from the database by name
-     * @param name The name of the theme to get
-     * @return The Theme requested, or null if not found
-     */
     Theme getTheme(String name) {
         ResultSet rs;
         Theme themeFound = null;
         try {
             PreparedStatement psSearch = conn.prepareStatement(
-                    "SELECT theme_name, theme_file, theme_show" +
-                            " FROM " + Table.THEME.getTableName() +
-                            " WHERE theme_name=?"
+                    "SELECT name, filename, showTheme FROM " + Table.THEME.getTableName() +
+                            " WHERE name=?"
             );
             statements.add(psSearch);
             psSearch.setString(1, name);
@@ -527,18 +402,11 @@ class Database {
         return themeFound;
     }
 
-    /**
-     * Get all themes from the database
-     *
-     * @return An ArrayList of themes
-     */
     ArrayList<Theme> queryThemes() {
         ArrayList<Theme> themes = new ArrayList<>();
         ResultSet rs;
         try {
-            rs = s.executeQuery("SELECT theme_name, theme_file, theme_show" +
-                    " FROM " + Table.THEME.getTableName() +
-                    " ORDER BY theme_name");
+            rs = s.executeQuery("SELECT name, filename, showTheme FROM " + Table.THEME.getTableName() + " ORDER BY name");
             while (rs.next()) {
                 themes.add(new Theme(
                         rs.getString(1),
@@ -554,351 +422,5 @@ class Database {
         }
         return themes;
     }
-
-    /*----------------------------------------------------------------------*
-     * Routine table methods
-     *----------------------------------------------------------------------*/
-
-    /**
-     * Insert a routine if it's a new routine; update if it's an existing routine
-     *
-     * @param routine           The routine to insert or update
-     * @param commitTransaction True to commit, false to skip commit
-     *                          Useful if transaction is in progress
-     */
-    private void upsertRoutine(Routine routine, @SuppressWarnings("SameParameterValue") boolean commitTransaction) {
-        if (getRoutineByID(routine.getID()) == null) {
-            insertRoutine(routine, commitTransaction);
-        } else {
-            updateRoutine(routine, commitTransaction);
-        }
-    }
-
-    /**
-     * Insert a new routine
-     *
-     * @param routine           The routine to insert
-     * @param commitTransaction True to commit, false to skip commit
-     *                          Useful if transaction is in progress
-     */
-    private void insertRoutine(Routine routine, boolean commitTransaction) {
-        PreparedStatement psInsert;
-
-        try {
-            psInsert = conn.prepareStatement("insert into " +
-                    Table.ROUTINE.getTableName() +
-                    " (routine_name, routine_user_id) values (?, ?)");
-            statements.add(psInsert);
-            // parameter 1 is routine_name (varchar),
-            // parameter 2 is routine_user_id (int),
-            psInsert.setString(1, routine.getName());
-            psInsert.setLong(2, User.getSignedInUser().getID());
-            psInsert.executeUpdate();
-            if (commitTransaction) {
-                commit("insertRoutine");
-            }
-        } catch (SQLException sqle) {
-            printSQLException(sqle);
-            cleanUp();
-        }
-    }
-
-    /**
-     * Update an existing routine
-     *
-     * @param routine           The routine to update
-     * @param commitTransaction True to commit, false to skip commit
-     *                          Useful if transaction is in progress
-     */
-    private void updateRoutine(Routine routine, boolean commitTransaction) {
-        PreparedStatement psUpdate;
-        try {
-            psUpdate = conn.prepareStatement(
-                    "update " + Table.ROUTINE.getTableName() + " set " +
-                            "routine_name=?, " +
-                            "routine_user_id=?, " +
-                            "where routine_id=?");
-            statements.add(psUpdate);
-            // parameter 1 is routine_name (varchar),
-            // parameter 2 is routine_user_id (int),
-            // parameter 3 is routine_id (int)
-            psUpdate.setString(1, routine.getName());
-            psUpdate.setLong(2, User.getSignedInUser().getID());
-            psUpdate.setLong(3, routine.getID());
-            psUpdate.executeUpdate();
-            if (commitTransaction) {
-                commit("updateRoutine");
-            }
-        } catch (SQLException sqle) {
-            printSQLException(sqle);
-            cleanUp();
-        }
-    }
-
-    /**
-     * Get a list of all routines
-     *
-     * @return An ArrayList of all routines
-     */
-    ArrayList<Routine> queryRoutinesForUser(User user) {
-        ArrayList<Routine> routines = new ArrayList<>();
-        PreparedStatement psQuery;
-        ResultSet rs;
-        try {
-            psQuery = conn.prepareStatement(
-                    "SELECT routine_id, routine_name " +
-                            "FROM " + Table.ROUTINE.getTableName() +
-                            " WHERE routine_user_id=? " +
-                            " ORDER BY routine_id"
-            );
-            statements.add(psQuery);
-            // Parameter is routine_user_id (int)
-            psQuery.setLong(1, user.getID());
-            rs = psQuery.executeQuery();
-            while (rs.next()) {
-                routines.add(new Routine(
-                        rs.getLong(1),
-                        rs.getString(2)
-                ));
-            }
-            commit("queryRoutinesForUser");
-        } catch (SQLException sqle) {
-            printSQLException(sqle);
-            cleanUp();
-        }
-        return routines;
-    }
-
-    /**
-     * Get a routine based on their id
-     *
-     * @param idInput The id of the routine to get
-     * @return The Routine corresponding to that id
-     */
-    private Routine getRoutineByID(long idInput) {
-        PreparedStatement psQuery;
-        Routine routine = null;
-        ResultSet rs;
-        try {
-            psQuery = conn.prepareStatement(
-                    "SELECT routine_id, routine_name " +
-                            "FROM " + Table.ROUTINE.getTableName() +
-                            " WHERE routine_id=?"
-            );
-            statements.add(psQuery);
-            psQuery.setLong(1, idInput);
-            rs = psQuery.executeQuery();
-            if (rs.next()) {
-                long routine_id = rs.getLong(1);
-                String routine_name = rs.getString(2);
-                System.out.printf("So making %d %s", routine_id, routine_name);
-                routine = new Routine(routine_id, routine_name);
-            }
-            commit("getRoutineByID");
-        } catch (SQLException sqle) {
-            printSQLException(sqle);
-            cleanUp();
-        }
-        return routine;
-    }
-
-    /*----------------------------------------------------------------------*
-     * Task (and TimedTask, and UntimedTask) table methods
-     *----------------------------------------------------------------------*/
-
-    /**
-     * Insert a task if it's a new task; update if it's an existing task
-     *
-     * @param task              The Task to insert or update
-     * @param commitTransaction True to commit, false to skip commit
-     *                          Useful if transaction is in progress
-     */
-    private void upsertTask(Task task, @SuppressWarnings("SameParameterValue") boolean commitTransaction) {
-        if (getTaskByID(task.getID()) == null) {
-            insertTask(task, commitTransaction);
-        } else {
-            updateTask(task, commitTransaction);
-        }
-    }
-
-    /**
-     * Deletes a task from the database
-     *
-     * @param id                The id of the task to be deleted
-     * @param commitTransaction True to commit, false to skip commit
-     *                          Useful if transaction is in progress
-     */
-    private void deleteTask(long id, @SuppressWarnings("SameParameterValue") boolean commitTransaction) {
-        PreparedStatement psUpdate;
-        try {
-            psUpdate = conn.prepareStatement("DELETE FROM " +
-                    Table.TASK.getTableName() +
-                    " WHERE task_id=?");
-            psUpdate.setLong(1, id);
-            psUpdate.executeUpdate();
-            if (commitTransaction) {
-                commit("deleteTask");
-            }
-        } catch (SQLException sqle) {
-            printSQLException(sqle);
-            cleanUp();
-        }
-    }
-
-    /**
-     * Insert a new task
-     * @param task              The task to insert
-     * @param commitTransaction True to commit, false to skip commit
-     *                          Useful if transaction is in progress
-     */
-    private void insertTask(Task task, boolean commitTransaction) {
-        PreparedStatement psInsert;
-
-        try {
-            psInsert = conn.prepareStatement("insert into " +
-                    Table.TASK.getTableName() +
-                    " (task_name, task_routine_id) values (?, ?)");
-            statements.add(psInsert);
-            // parameter 1 is task_name (varchar),
-            // parameter 2 is task_routine_id (int),
-            psInsert.setString(1, task.getName());
-            psInsert.setLong(2, task.getRoutineID());
-            psInsert.executeUpdate();
-            if (commitTransaction) {
-                commit("insert task " + task.getName());
-            }
-        } catch (SQLException sqle) {
-            printSQLException(sqle);
-            cleanUp();
-        }
-    }
-
-    /**
-     * Update an existing task
-     *
-     * @param task              The task to update
-     * @param commitTransaction True to commit, false to skip commit
-     *                          Useful if transaction is in progress
-     */
-    private void updateTask(Task task, boolean commitTransaction) {
-        PreparedStatement psUpdate;
-        try {
-            psUpdate = conn.prepareStatement(
-                    "update " + Table.TASK.getTableName() + " set " +
-                            "task_name=?, " +
-                            "task_user_id=?, " +
-                            "where task_id=?");
-            statements.add(psUpdate);
-            // parameter 1 is task_name (varchar),
-            // parameter 2 is task_user_id (int),
-            // parameter 3 is task_id (int)
-            psUpdate.setString(1, task.getName());
-            psUpdate.setLong(2, User.getSignedInUser().getID());
-            psUpdate.setLong(3, task.getID());
-            psUpdate.executeUpdate();
-            if (commitTransaction) {
-                commit("update task for " + task.getID() + " to " + task.getName());
-            }
-        } catch (SQLException sqle) {
-            printSQLException(sqle);
-            cleanUp();
-        }
-    }
-
-    /**
-     * Get a list of all routines
-     *
-     * @return An ArrayList of all routines
-     */
-    ArrayList<Task> queryTasksForRoutine(Routine routine) {
-        ArrayList<Task> tasks = new ArrayList<>();
-        PreparedStatement psQuery;
-//        String taskType;
-        ResultSet rs;
-        try {
-            psQuery = conn.prepareStatement(
-                    "SELECT task_id, task_name, task_type, task_routine_id, task_minutes" +
-                            " FROM " + Table.TASK.getTableName() +
-                            " JOIN " + Table.TIMED_TASK.getTableName() +
-                            " ON Task.task_id = TimedTask.task_id" +
-                            " WHERE task_routine_id=? "
-            );
-            statements.add(psQuery);
-            psQuery.setLong(1, routine.getID());
-            rs = psQuery.executeQuery();
-            while (rs.next()) {
-//                taskType = rs.getString(3);
-                // TODO: join with TimedTask and UntimedTask and create appropriate task
-                tasks.add(
-                        rs.getInt(4) > 0 ?
-                        new TimedTask(
-                                rs.getString(2),
-                                rs.getLong(1),
-                                rs.getInt(4)
-                        ) :
-                        new UntimedTask(
-                                rs.getString(2),
-                                rs.getLong(1)
-                        ));
-            }
-            commit("queryTasksForRoutine");
-        } catch (SQLException sqle) {
-            printSQLException(sqle);
-            cleanUp();
-        }
-        return tasks;
-    }
-
-    /**
-     * Get a task based on their id
-     *
-     * @param idInput The id of the task to get
-     * @return The Task corresponding to that id
-     */
-    private Task getTaskByID(long idInput) {
-        PreparedStatement psQuery;
-        Task task = null;
-        ResultSet rs;
-        try {
-            psQuery = conn.prepareStatement(
-                    "SELECT task_id, task_name, task_routine_id, task_minutes " +
-                            "FROM " + Table.TASK.getTableName() +
-                            " JOIN " + Table.TIMED_TASK.getTableName() +
-                            " ON Task.task_id = TimedTask.task_id" +
-                            " WHERE task_id=?"
-            );
-            statements.add(psQuery);
-            psQuery.setLong(1, idInput);
-            rs = psQuery.executeQuery();
-            if (rs.next()) {
-                long task_id = rs.getLong(1);
-                String task_name = rs.getString(2);
-                long task_routine_id = rs.getLong(3);
-                int task_minutes = rs.getInt(4);
-                System.out.printf("So making %d %s", task_id, task_name);
-                // TODO: Distinguish timed and untimed
-                task = task_minutes > 0 ?
-                        new TimedTask(task_id, task_name, task_routine_id, task_minutes) :
-            new UntimedTask(task_id, task_name, task_routine_id);
-            }
-            commit("getRoutineByID");
-        } catch (SQLException sqle) {
-            printSQLException(sqle);
-            cleanUp();
-        }
-        return task;
-    }
-
-    // Round Five...
-//    TIMED_TASK("TimedTask",
-//                       "task_id int, " +
-//                       "length int, " +
-//                       "primary key (task_id), " +
-//                       "foreign key (task_id) references Task (task_id)"),
-//    UNTIMED_TASK("UntimedTask",
-//                         "task_id int, " +
-//                         "primary key (task_id), " +
-//                         "foreign key (task_id) references Task (task_id)");
-
 
 }
