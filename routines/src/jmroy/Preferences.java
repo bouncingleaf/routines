@@ -1,5 +1,6 @@
 package jmroy;
 
+import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.layout.GridPane;
@@ -16,6 +17,8 @@ class Preferences {
         final int COLOR_THEME_ROW = 0;
 
         VBox prefsLayout = new VBox();
+        prefsLayout.setAlignment(Pos.CENTER);
+
         ChoiceBox<Theme> choiceBox = new ChoiceBox<>();
         choiceBox.getItems().addAll(Theme.THEMES_SHOWN);
         choiceBox.getSelectionModel().selectedItemProperty().addListener((

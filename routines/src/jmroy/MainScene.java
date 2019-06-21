@@ -2,6 +2,7 @@ package jmroy;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ListView;
@@ -31,10 +32,12 @@ class MainScene {
         };
 
         VBox mainLayout = new VBox();
+        mainLayout.setAlignment(Pos.CENTER);
         mainLayout.setSpacing(10);
 
         HBox menu = new HBox();
         menu.setSpacing(10);
+        menu.setAlignment(Pos.CENTER);
         Stream.of(MENU_CHOICES)
                 .map(choice -> {
                     Button button = Screen.getAButton(choice.itemName);

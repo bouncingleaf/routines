@@ -1,14 +1,23 @@
 package jmroy;
 
+import javafx.animation.KeyFrame;
+import javafx.animation.KeyValue;
+import javafx.animation.Timeline;
+import javafx.beans.property.IntegerProperty;
+import javafx.beans.property.SimpleIntegerProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
+import javafx.util.Duration;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -25,6 +34,7 @@ class Routine implements Serializable {
     static private TextField routineNameTextField;
     static private TextField addTaskNameTextField;
     static private TextField addTaskLengthTextField;
+    static private Timeline timeline;
 
     // Instance variables
 
@@ -59,6 +69,7 @@ class Routine implements Serializable {
 
         // The Add Routine page layout
         VBox addRoutineLayout = new VBox();
+        addRoutineLayout.setAlignment(Pos.CENTER);
 
         // First thing on the page is a grid for the input fields
         GridPane inputFieldsGrid = Screen.getAGridPane();
@@ -193,6 +204,8 @@ class Routine implements Serializable {
      */
     static Scene manageRoutinesScene() {
         VBox manageLayout = new VBox();
+        manageLayout.setAlignment(Pos.CENTER);
+
         manageLayout.getChildren().addAll(
                 Screen.getLabel("Managing " + User.getSignedInUser().getName() + "'s routines"),
                 Screen.getLabel("Choose a routine to edit:")
@@ -221,20 +234,107 @@ class Routine implements Serializable {
 
     /**
      * Get the scene to run a specified Routine
+     * Timer code based on:
+     * https://asgteach.com/wp-content/uploads/2015/04/FXTimerBinding.java
+     *
      * @param routineToRun The Routine to be run
      * @return the Scene that will run the routine
      */
     static Scene runRoutineScene(Routine routineToRun) {
+//        final int STARTTIME = 15;
+//        Label timerLabel = new Label();
+//        IntegerProperty timeSeconds = new SimpleIntegerProperty(STARTTIME);
+
+        // Bind the timerLabel text property to the timeSeconds property
+//        timerLabel.textProperty().bind(timeSeconds.asString());
+//        timerLabel.setTextFill(Color.RED);
+//        timerLabel.setStyle("-fx-font-size: 4em;");
+
+//        Button startButton = new Button();
+//        startButton.setText("Start Timer");
+//        startButton.setOnAction(event -> {
+//            if (timeline != null) {
+//                timeline.stop();
+//            }
+//            timeSeconds.set(STARTTIME);
+//            timeline = new Timeline();
+//            timeline.getKeyFrames().add(
+//                    new KeyFrame(Duration.seconds(STARTTIME+1),
+//                            new KeyValue(timeSeconds, 0)));
+//            timeline.playFromStart();
+//        });
+
+        ArrayList<Task> tasks = routineToRun.getTasks();
+
         VBox runLayout = new VBox();
+        runLayout.setAlignment(Pos.CENTER);
+
+        Button demoButton = new Button();
+        demoButton.setText("Demo mode");
+        demoButton.setOnAction(event -> demoModeScene(runLayout, routineToRun));
+
         runLayout.getChildren().addAll(
                 Screen.getLabel("Real run routine - coming soon. For now, a simulation.\n"),
-                Screen.getLabel("Running routine " + routineToRun.getTitle() + ":\n")
+//                timerLabel,
+//                startButton,
+                demoButton
         );
-        routineToRun.getTasks().forEach(
+
+        tasks.forEach(
                 task -> runLayout.getChildren().add(Screen.getLabel(task.toString()))
         );
         runLayout.getChildren().add(Screen.getExitButton("Exit " + routineToRun.getTitle()));
         return Screen.getAScene(runLayout);
+    }
+
+    /**
+     * Get the scene to run a specified Routine - Demo mode
+     * Timer code based on:
+     * https://asgteach.com/wp-content/uploads/2015/04/FXTimerBinding.java
+     *
+     * @param routineToRun The Routine to be run
+     */
+    private static void demoModeScene(VBox mainLayout, Routine routineToRun) {
+        routineToRun.getTasks().forEach(
+                task -> mainLayout.getChildren().addAll(
+                        Screen.getLabel(task.toString()),
+                        singleTimer(task))
+        );
+    }
+
+    private static VBox singleTimer(Task task) {
+        int time = task instanceof TimedTask ? ((TimedTask) task).getMinutes() : 0;
+        Label timerLabel = new Label();
+        IntegerProperty timeSeconds = new SimpleIntegerProperty(time);
+
+        // Bind the timerLabel text property to the timeSeconds property
+        timerLabel.textProperty().bind(timeSeconds.asString());
+        timerLabel.setTextFill(Color.RED);
+        timerLabel.setStyle("-fx-font-size: 4em;");
+
+        Button button = new Button();
+        button.setText("Start Timer");
+        button.setOnAction(event -> {
+            if (timeline != null) {
+                timeline.stop();
+            }
+            timeSeconds.set(time);
+            timeline = new Timeline();
+            timeline.getKeyFrames().add(
+                    new KeyFrame(Duration.seconds(time + 1),
+                            new KeyValue(timeSeconds, 0)));
+            timeline.playFromStart();
+        });
+
+        VBox runLayout = new VBox();
+        runLayout.setAlignment(Pos.CENTER);
+
+        runLayout.getChildren().addAll(
+                Screen.getLabel("Task: " + task.getName() + "\n"),
+                button,
+                timerLabel
+        );
+        return runLayout;
     }
 
 
@@ -260,5 +360,7 @@ class Routine implements Serializable {
     public String toString() {
         return this.getTitle();
     }
+
+
 
 }
