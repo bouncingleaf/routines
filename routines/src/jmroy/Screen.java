@@ -21,6 +21,7 @@ class Screen {
         NAME,
         ADD,
         MANAGE,
+        REPORTS,
         PREFS,
         ERROR
     }
@@ -111,6 +112,9 @@ class Screen {
                 break;
             case MANAGE:
                 go(Routine.manageRoutinesScene());
+                break;
+            case REPORTS:
+                go(Reports.getReportsScene());
                 break;
             case PREFS:
                 go(Preferences.getPreferencesScene());

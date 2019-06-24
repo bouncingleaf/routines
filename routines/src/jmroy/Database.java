@@ -233,6 +233,10 @@ class Database {
      * User table methods
      *----------------------------------------------------------------------*/
 
+    /**
+     * If the user is new, inserts the user; otherwise, updates the user
+     * @param user The User to insert or update
+     */
     void upsertUser(User user) {
         if (getUserByUsername(user.getUserName()) == null) {
             insertUser(user);
@@ -241,6 +245,10 @@ class Database {
         }
     }
 
+    /**
+     * Inserts the user into the database
+     * @param user The User to insert
+     */
     void insertUser(User user) {
         PreparedStatement psInsert;
 
@@ -263,6 +271,10 @@ class Database {
         }
     }
 
+    /**
+     * Updates a user in the database
+     * @param user The User to update
+     */
     void updateUser(User user) {
         PreparedStatement psUpdate;
         try {
@@ -316,6 +328,11 @@ class Database {
         return users;
     }
 
+    /**
+     * Given the username, returns the user ID
+     * @param usernameInput The username to search for
+     * @return An integer, the user ID
+     */
     Integer getUserIDByUsername(String usernameInput) {
         PreparedStatement psQuery;
         Integer id = null;
@@ -340,6 +357,11 @@ class Database {
         return id;
     }
 
+    /**
+     * Determines if a given username is in the database or not.
+     * @param usernameInput The username to look for
+     * @return True if the user is found, false if not
+     */
     boolean usernameInDatabase(String usernameInput) {
         PreparedStatement psQuery;
         boolean found = false;
@@ -364,7 +386,11 @@ class Database {
         return found;
     }
 
-
+    /**
+     * Gets information about a user from the database, given a username
+     * @param usernameInput The username to get data for
+     * @return The User data
+     */
     User getUserByUsername(String usernameInput) {
         PreparedStatement psQuery;
         User user = null;
@@ -402,6 +428,10 @@ class Database {
      * Theme table methods
      *----------------------------------------------------------------------*/
 
+    /**
+     * Inserts a theme into the database
+     * @param theme The theme to insert
+     */
     private void insertTheme(Theme theme) {
         PreparedStatement psInsert;
 
@@ -448,6 +478,10 @@ class Database {
 //        return themeFound;
 //    }
 
+    /**
+     * Gets all the available themes
+     * @return an ArrayList of Themes
+     */
     ArrayList<Theme> queryThemes() {
         ArrayList<Theme> themes = new ArrayList<>();
         ResultSet rs;

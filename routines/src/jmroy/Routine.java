@@ -17,10 +17,12 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
-import javafx.util.Duration;
+// Can't import both javafx.util.Duration and java.time.Duration
+// import javafx.util.Duration;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.time.Duration;
 
 /**
  * The Routine class: a Routine is a list of tasks, with a title.
@@ -35,6 +37,12 @@ class Routine implements Serializable {
     static private TextField addTaskNameTextField;
     static private TextField addTaskLengthTextField;
     static private Timeline timeline;
+    static private int currentRunningTask = 0;
+    enum TreatMinutesAs{
+        MINUTES,
+        SECONDS
+    }
+    static private TreatMinutesAs currentMode = TreatMinutesAs.SECONDS;
 
     // Instance variables
 
@@ -189,8 +197,10 @@ class Routine implements Serializable {
         Routine newRoutine = new Routine(routineName.length() > 0 ? routineName : "My Routine");
         myTasks.forEach(newRoutine::addTask);
         if (selectedRoutine == null) {
+            // Add a new routine
             user.addRoutine(newRoutine);
         } else {
+            // Update an existing routine
             ArrayList<Routine> myRoutines = user.getMyRoutines();
             myRoutines.set(myRoutines.indexOf(selectedRoutine),newRoutine);
             user.setMyRoutines(myRoutines);
@@ -241,49 +251,63 @@ class Routine implements Serializable {
      * @return the Scene that will run the routine
      */
     static Scene runRoutineScene(Routine routineToRun) {
-//        final int STARTTIME = 15;
-//        Label timerLabel = new Label();
-//        IntegerProperty timeSeconds = new SimpleIntegerProperty(STARTTIME);
-
-        // Bind the timerLabel text property to the timeSeconds property
-//        timerLabel.textProperty().bind(timeSeconds.asString());
-//        timerLabel.setTextFill(Color.RED);
-//        timerLabel.setStyle("-fx-font-size: 4em;");
-
-//        Button startButton = new Button();
-//        startButton.setText("Start Timer");
-//        startButton.setOnAction(event -> {
-//            if (timeline != null) {
-//                timeline.stop();
-//            }
-//            timeSeconds.set(STARTTIME);
-//            timeline = new Timeline();
-//            timeline.getKeyFrames().add(
-//                    new KeyFrame(Duration.seconds(STARTTIME+1),
-//                            new KeyValue(timeSeconds, 0)));
-//            timeline.playFromStart();
-//        });
-
         ArrayList<Task> tasks = routineToRun.getTasks();
-
         VBox runLayout = new VBox();
         runLayout.setAlignment(Pos.CENTER);
+        runLayout.setSpacing(10);
+
+        // If there are no tasks in this routine, just show the exit button
+        if (tasks.size() == 0) {
+            runLayout.getChildren().add(Screen.getExitButton("Exit " + routineToRun.getTitle()));
+            return Screen.getAScene(runLayout);
+        }
+
+        // Otherwise, run the first task
+        currentRunningTask = 0;
+
+        // Add the task to the task layout
+        VBox taskLayout = new VBox();
+        taskLayout.setAlignment(Pos.CENTER);
+        taskLayout.setSpacing(10);
+        taskLayout.getChildren().add(
+                singleTimer(tasks.get(currentRunningTask))
+        );
+
+        // Create the "done" button - if there are tasks left, moves on to the next
+        // If no tasks left, button ends the routine
+        Button doneButton = new Button();
+        doneButton.setText("Done with this task");
+        doneButton.setOnAction(e -> {
+            currentRunningTask++;
+            taskLayout.getChildren().clear();
+            taskLayout.getChildren().add(
+                    currentRunningTask < tasks.size() ?
+                            singleTimer(tasks.get(currentRunningTask)) :
+                            Screen.getExitButton("Finished " + routineToRun.getTitle())
+            );
+        });
 
         Button demoButton = new Button();
         demoButton.setText("Demo mode");
         demoButton.setOnAction(event -> demoModeScene(runLayout, routineToRun));
 
-        runLayout.getChildren().addAll(
-                Screen.getLabel("Real run routine - coming soon. For now, a simulation.\n"),
-//                timerLabel,
-//                startButton,
-                demoButton
+        HBox footer = new HBox();
+        footer.setAlignment(Pos.CENTER);
+        footer.setMinHeight(20);
+        footer.setSpacing(10);
+
+        footer.getChildren().addAll(
+                demoButton,
+                Screen.getExitButton("Exit this routine")
         );
 
-        tasks.forEach(
-                task -> runLayout.getChildren().add(Screen.getLabel(task.toString()))
+        // Add the task layout and done button to the run layout
+        runLayout.getChildren().addAll(
+                taskLayout,
+                doneButton,
+                footer
         );
-        runLayout.getChildren().add(Screen.getExitButton("Exit " + routineToRun.getTitle()));
+
         return Screen.getAScene(runLayout);
     }
 
@@ -303,37 +327,45 @@ class Routine implements Serializable {
     }
 
     private static VBox singleTimer(Task task) {
-        int time = task instanceof TimedTask ? ((TimedTask) task).getMinutes() : 0;
-        Label timerLabel = new Label();
-        IntegerProperty timeSeconds = new SimpleIntegerProperty(time);
-
-        // Bind the timerLabel text property to the timeSeconds property
-        timerLabel.textProperty().bind(timeSeconds.asString());
-        timerLabel.setTextFill(Color.RED);
-        timerLabel.setStyle("-fx-font-size: 4em;");
-
-        Button button = new Button();
-        button.setText("Start Timer");
-        button.setOnAction(event -> {
-            if (timeline != null) {
-                timeline.stop();
-            }
-            timeSeconds.set(time);
-            timeline = new Timeline();
-            timeline.getKeyFrames().add(
-                    new KeyFrame(Duration.seconds(time + 1),
-                            new KeyValue(timeSeconds, 0)));
-            timeline.playFromStart();
-        });
-
         VBox runLayout = new VBox();
         runLayout.setAlignment(Pos.CENTER);
 
-        runLayout.getChildren().addAll(
-                Screen.getLabel("Task: " + task.getName() + "\n"),
-                button,
-                timerLabel
-        );
+        if (task instanceof TimedTask) {
+            int time = ((TimedTask) task).getMinutes();
+            Duration duration = currentMode == TreatMinutesAs.MINUTES ?
+                    Duration.ofMinutes(time) :
+                    Duration.ofSeconds(time);
+            Label timeRemainingText = new Label();
+            IntegerProperty timeSeconds = new SimpleIntegerProperty((int) duration.getSeconds());
+
+            // Bind the timeRemainingText text property to the timeSeconds property
+            timeRemainingText.textProperty().bind(timeSeconds.asString());
+            timeRemainingText.setTextFill(Color.RED);
+            timeRemainingText.setStyle("-fx-font-size: 6em;");
+
+            Button startButton = new Button();
+            startButton.setText("Start task: " + task.getName());
+            startButton.setOnAction(event -> {
+                if (timeline != null) {
+                    timeline.stop();
+                }
+                timeSeconds.set(time);
+                timeline = new Timeline();
+                timeline.getKeyFrames().add(
+                        new KeyFrame(javafx.util.Duration.seconds(duration.getSeconds() + 1),
+                                new KeyValue(timeSeconds, 0)));
+                timeline.playFromStart();
+            });
+            runLayout.getChildren().addAll(
+                    startButton,
+                    timeRemainingText
+            );
+        } else {
+            runLayout.getChildren().add(
+                    Screen.getLabel("Task: " + task.getName() + " (untimed)")
+            );
+        }
+
         return runLayout;
     }
 

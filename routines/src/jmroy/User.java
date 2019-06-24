@@ -26,6 +26,7 @@ class User implements Serializable {
 
     private int id;
     private ArrayList<Routine> myRoutines;
+    private ArrayList<Report> myReports;
     private String name;
     private String userName;
     private Theme themePreference = Theme.DEFAULT;
@@ -40,6 +41,7 @@ class User implements Serializable {
      */
     User(String userName, String name) {
         this.myRoutines = new ArrayList<>();
+        this.myReports = new ArrayList<>();
         this.userName = userName;
         this.name = name.equals("") ? userName : name;
     }
@@ -170,6 +172,23 @@ class User implements Serializable {
 
     void addRoutine(Routine routine) {
         myRoutines.add(routine);
+    }
+
+    /**
+     * Gets all the reports for this user.
+     *
+     * @return An ArrayList of all the user's reports.
+     */
+    ArrayList<Report> getMyReports() {
+        return myReports;
+    }
+
+    void setMyReports(ArrayList<Report> myReports) {
+        this.myReports = myReports;
+    }
+
+    void addReport(Report report) {
+        myReports.add(report);
     }
 
     int getID() {

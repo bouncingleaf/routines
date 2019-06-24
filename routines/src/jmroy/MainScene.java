@@ -28,6 +28,7 @@ class MainScene {
         final MenuItem[] MENU_CHOICES = {
                 new MenuItem("Add a routine", Screen.Pages.ADD),
                 new MenuItem("Manage routines", Screen.Pages.MANAGE),
+                new MenuItem("Reports", Screen.Pages.REPORTS),
                 new MenuItem("Preferences", Screen.Pages.PREFS)
         };
 
