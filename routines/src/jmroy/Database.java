@@ -75,20 +75,6 @@ class Database {
     }
 
     private static Database currentDatabase;
-
-    static Database getDb() {
-        return currentDatabase;
-    }
-
-    static void createDb(boolean test) {
-        currentDatabase = new Database(test);
-    }
-
-    /* We will be using Statement and PreparedStatement objects for
-     * executing SQL. These objects, as well as Connections and ResultSets,
-     * are resources that should be released explicitly after use, hence
-     * the try-catch-finally pattern used below.
-     */
     private Connection conn = null;
     private ArrayList<Statement> statements = new ArrayList<>(); // list of Statements, PreparedStatements
     private Statement s;
@@ -114,6 +100,10 @@ class Database {
         System.out.println("Done building database.");
     }
 
+    /**
+     * Constructor for the database
+     * @param test True if this is a test database, false otherwise
+     */
     private Database(boolean test) {
         String DB_NAME = test ? "routinesTestDB" : "routinesDB";
         String PROTOCOL = "jdbc:derby://localhost:1527/";
@@ -154,6 +144,14 @@ class Database {
     /*----------------------------------------------------------------------*
      * General database methods
      *----------------------------------------------------------------------*/
+
+    static Database getDb() {
+        return currentDatabase;
+    }
+
+    static void createDb(boolean test) {
+        currentDatabase = new Database(test);
+    }
 
     /**
      * Creates all of the tables, in the specified order.
@@ -506,7 +504,6 @@ class Database {
      */
     void insertLogEntry(LogEntry logEntry) {
         PreparedStatement psInsert;
-
         try {
             // parameter 1 is log_user_id (int),
             // parameter 2 is start_date_time (timestamp),
@@ -517,12 +514,8 @@ class Database {
                     " (log_user_id, start_date_time, end_date_time, routine_name) values (?, ?, ?, ?)");
             statements.add(psInsert);
             psInsert.setInt(1, logEntry.getUserID());
-            System.out.println("working with " + logEntry.getStartDateTime() + " and " + logEntry.getEndDateTime());
-            Timestamp start = Timestamp.valueOf(logEntry.getStartDateTime());
-            Timestamp end = Timestamp.valueOf(logEntry.getEndDateTime());
-            System.out.println("start is " + start + " and end is " + end);
-            psInsert.setTimestamp(2, start);
-            psInsert.setTimestamp(3, end);
+            psInsert.setTimestamp(2, Timestamp.valueOf(logEntry.getStartDateTime()));
+            psInsert.setTimestamp(3, Timestamp.valueOf(logEntry.getEndDateTime()));
             psInsert.setString(4, logEntry.getRoutineName());
             psInsert.executeUpdate();
             commit("inserted logEntry");

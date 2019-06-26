@@ -39,10 +39,6 @@ public class Report implements Serializable {
         this.title = title;
     }
 
-    public String toString() {
-        return runDateTime + " " + title;
-    }
-
     /**
      * Creates a new report in a separate thread
      */
@@ -71,34 +67,23 @@ public class Report implements Serializable {
             // Simulate taking some time to make the report...
             try {
                 // Sleep makes it more obvious that this is a separate thread
-                Thread.sleep(3000);
+                Thread.sleep(2000);
                 // Actually make the new report
                 Report newReport = new Report(newTitle);
                 ArrayList<LogEntry> logEntries = LogEntry.getLogEntries();
-                System.out.println("got: " + logEntries);
                 ArrayList<Integer> logEntryIDs = new ArrayList<>();
                 logEntries.forEach(entry -> logEntryIDs.add(entry.getID()));
                 newReport.setLogEntryIDs(logEntryIDs);
                 // Save it to the user's reports
-                System.out.println("Saving report " + newReport);
                 user.addReport(newReport);
                 // Save the user data
                 user.saveUserDataFile();
-                System.out.println("Actually done loading saving etc.");
             } catch (InterruptedException e) {
                 e.printStackTrace();
                 Thread.currentThread().interrupt();
             }
-            System.out.println("Thread for creating " + newTitle + " report done.");
+            System.out.println("Creating " + newTitle + " report done.");
         }
-    }
-
-    private void setLogEntryIDs(ArrayList<Integer> logEntryIDs) {
-        this.logEntryIDs = logEntryIDs;
-    }
-
-    private ArrayList<Integer> getLogEntryIDs() {
-        return this.logEntryIDs;
     }
 
     /**
@@ -142,4 +127,17 @@ public class Report implements Serializable {
 
         return Screen.getAScene(runLayout);
     }
+
+    private void setLogEntryIDs(ArrayList<Integer> logEntryIDs) {
+        this.logEntryIDs = logEntryIDs;
+    }
+
+    private ArrayList<Integer> getLogEntryIDs() {
+        return this.logEntryIDs;
+    }
+
+    public String toString() {
+        return runDateTime + " " + title;
+    }
+
 }

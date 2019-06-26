@@ -279,6 +279,9 @@ class Routine implements Serializable {
         runLayout.setAlignment(Pos.TOP_CENTER);
         runLayout.setSpacing(10);
         runLayout.setPadding(new Insets(10));
+        runLayout.getChildren().add(
+                Screen.getLabel("Routine: " + routineToRun.getTitle())
+        );
 
         // If there are no tasks in this routine, just show the exit button
         if (tasks.size() == 0) {

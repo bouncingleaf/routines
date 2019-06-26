@@ -16,11 +16,11 @@ activate Login
 Screen->Login:getLoginScene()
 Login->User:signIn()
 activate User
-alt not found in USERS file
+alt not found in Database
   Login->Login:getNamePromptScene()
   Login->User:signUp()
   User->Storage:save()
-else found in USERS file
+else found in Database
   User->Storage: User:load()
   Storage-->User: user data
 end
@@ -42,6 +42,22 @@ loop main:until exit
     Routine->Task:new
     Routine->User:setMyRoutines()
     User->Storage:save()
+  else choice Reports
+    MainScene->Screen:goToScreen(REPORTS)
+    activate Reports
+    Reports->User:getMyReports()
+    User-->Reports:myReports
+    alt choice Generate new Report
+      activate Report
+      Reports->Report:createNewReport()
+      Report-->Reports:new Report
+      Reports->User:addReport()
+      User-->Storage:save()
+    else choice Run report
+      Reports->Report:runReportScene()
+      Report->Storage:getLogEntryByID()
+      Storage-->Report:LogEntry
+    end
   else choice Preferences
     MainScene->Screen:goToScreen(PREFS)
     activate Preferences

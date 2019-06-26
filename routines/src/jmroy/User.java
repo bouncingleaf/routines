@@ -188,7 +188,7 @@ class User implements Serializable {
         return myReports;
     }
 
-    void addReport(Report report) {
+    synchronized void addReport(Report report) {
         myReports.add(report);
     }
 
@@ -224,7 +224,7 @@ class User implements Serializable {
     /**
      * Serializes the User object and saves the data to a file specific to that user.
      */
-    void saveUserDataFile() {
+    synchronized void saveUserDataFile() {
         final String USER_FILE = FILE_DIR + "USER_" + this.getUserName();
         try (FileOutputStream fileOutputStream = new FileOutputStream(USER_FILE)) {
             ObjectOutputStream objectOutputStream = new ObjectOutputStream(fileOutputStream);
