@@ -7,6 +7,7 @@ import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
@@ -17,15 +18,15 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
-// Can't import both javafx.util.Duration and java.time.Duration
-// import javafx.util.Duration;
 
 import java.io.Serializable;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.time.Duration;
 
 /**
  * The Routine class: a Routine is a list of tasks, with a title.
+ *
  * @author Jessica Roy
  */
 class Routine implements Serializable {
@@ -38,11 +39,7 @@ class Routine implements Serializable {
     static private TextField addTaskLengthTextField;
     static private Timeline timeline;
     static private int currentRunningTask = 0;
-    enum TreatMinutesAs{
-        MINUTES,
-        SECONDS
-    }
-    static private TreatMinutesAs currentMode = TreatMinutesAs.SECONDS;
+    static private boolean demoMode = false;
 
     // Instance variables
 
@@ -50,7 +47,7 @@ class Routine implements Serializable {
     private ArrayList<Task> tasks;
 
     // Constructors
-    
+
     private Routine() {
         this.tasks = new ArrayList<>();
     }
@@ -152,6 +149,12 @@ class Routine implements Serializable {
         return Screen.getAScene(addRoutineLayout);
     }
 
+    /**
+     * Gets the information from the new task form and saves it to the
+     * routine's task list.
+     *
+     * @param myTasks The routine's task list
+     */
     private static void saveTask(ObservableList<Task> myTasks) {
         String taskName = addTaskNameTextField.getText();
         int taskLength;
@@ -175,22 +178,37 @@ class Routine implements Serializable {
         }
     }
 
+    /**
+     * Clears the task input fields and deselects any selected task
+     */
     private static void clearTask() {
         addTaskLengthTextField.clear();
         addTaskNameTextField.clear();
         selectedTask = null;
     }
 
+    /**
+     * When a task is selected by the user, populate the form fields
+     * to allow the user to edit that task
+     *
+     * @param tasksList The task list view the user is selecting from
+     * @param routine   The routine the user is editing
+     */
     private static void selectTask(ListView<Task> tasksList, Routine routine) {
         selectedTask = tasksList.getSelectionModel().getSelectedItem();
         routineNameTextField.setText(routine == null ? "" : routine.getName());
         addTaskNameTextField.setText(selectedTask == null ? "" : selectedTask.getName());
         // If the task is empty or untimed, leave the time blank
         // Otherwise, it's a TimedTask, get the time in string form from the TimedTask
-        addTaskLengthTextField .setText(selectedTask == null || selectedTask instanceof UntimedTask ? "" :
+        addTaskLengthTextField.setText(selectedTask == null || selectedTask instanceof UntimedTask ? "" :
                 Integer.toString(((TimedTask) selectedTask).getMinutes()));
     }
 
+    /**
+     * Save all edits to the routine or tasks
+     *
+     * @param myTasks The task list
+     */
     private static void saveAll(ObservableList<Task> myTasks) {
         User user = User.getSignedInUser();
         String routineName = routineNameTextField.getText();
@@ -202,7 +220,7 @@ class Routine implements Serializable {
         } else {
             // Update an existing routine
             ArrayList<Routine> myRoutines = user.getMyRoutines();
-            myRoutines.set(myRoutines.indexOf(selectedRoutine),newRoutine);
+            myRoutines.set(myRoutines.indexOf(selectedRoutine), newRoutine);
             user.setMyRoutines(myRoutines);
         }
         user.saveUserDataFile();
@@ -210,6 +228,7 @@ class Routine implements Serializable {
 
     /**
      * Build the scene for managing routines
+     *
      * @return The Scene for managing routines
      */
     static Scene manageRoutinesScene() {
@@ -221,6 +240,7 @@ class Routine implements Serializable {
                 Screen.getLabel("Choose a routine to edit:")
         );
         if (User.getSignedInUser() != null) {
+            // Build the user's list of routines
             ObservableList<Routine> myRoutines = FXCollections.observableArrayList(User.getSignedInUser().getMyRoutines());
             if (myRoutines.size() > 0) {
                 ListView<Routine> routinesList = new ListView<>(myRoutines);
@@ -251,14 +271,18 @@ class Routine implements Serializable {
      * @return the Scene that will run the routine
      */
     static Scene runRoutineScene(Routine routineToRun) {
+        System.out.println("Running routine " + routineToRun.toString());
+        LogEntry log = new LogEntry(routineToRun.toString());
         ArrayList<Task> tasks = routineToRun.getTasks();
+
         VBox runLayout = new VBox();
-        runLayout.setAlignment(Pos.CENTER);
+        runLayout.setAlignment(Pos.TOP_CENTER);
         runLayout.setSpacing(10);
+        runLayout.setPadding(new Insets(10));
 
         // If there are no tasks in this routine, just show the exit button
         if (tasks.size() == 0) {
-            runLayout.getChildren().add(Screen.getExitButton("Exit " + routineToRun.getTitle()));
+            runLayout.getChildren().add(getExitAndLogButton("Exit " + routineToRun.getTitle(), log));
             return Screen.getAScene(runLayout);
         }
 
@@ -273,8 +297,9 @@ class Routine implements Serializable {
                 singleTimer(tasks.get(currentRunningTask))
         );
 
-        // Create the "done" button - if there are tasks left, moves on to the next
-        // If no tasks left, button ends the routine
+        // Create the "done" button -
+        //   If there are tasks left, clicking this button moves on to the next
+        //   If no tasks left, button ends the routine
         Button doneButton = new Button();
         doneButton.setText("Done with this task");
         doneButton.setOnAction(e -> {
@@ -283,14 +308,16 @@ class Routine implements Serializable {
             taskLayout.getChildren().add(
                     currentRunningTask < tasks.size() ?
                             singleTimer(tasks.get(currentRunningTask)) :
-                            Screen.getExitButton("Finished " + routineToRun.getTitle())
+                            getExitAndLogButton("Finished " + routineToRun.getTitle(), log)
             );
         });
 
+        // Create a button to toggle demo mode (where "minutes" are run as seconds)
         Button demoButton = new Button();
-        demoButton.setText("Demo mode");
-        demoButton.setOnAction(event -> demoModeScene(runLayout, routineToRun));
+        demoButton.setText("Toggle demo mode");
+        demoButton.setOnAction(event -> demoMode = !demoMode);
 
+        // Make a footer with the routine-level buttons (demo and exit)
         HBox footer = new HBox();
         footer.setAlignment(Pos.CENTER);
         footer.setMinHeight(20);
@@ -298,10 +325,10 @@ class Routine implements Serializable {
 
         footer.getChildren().addAll(
                 demoButton,
-                Screen.getExitButton("Exit this routine")
+                getExitAndLogButton("Exit this routine", log)
         );
 
-        // Add the task layout and done button to the run layout
+        // Add the task layout, done button, and footer to the run layout
         runLayout.getChildren().addAll(
                 taskLayout,
                 doneButton,
@@ -311,58 +338,70 @@ class Routine implements Serializable {
         return Screen.getAScene(runLayout);
     }
 
-    /**
-     * Get the scene to run a specified Routine - Demo mode
-     * Timer code based on:
-     * https://asgteach.com/wp-content/uploads/2015/04/FXTimerBinding.java
-     *
-     * @param routineToRun The Routine to be run
-     */
-    private static void demoModeScene(VBox mainLayout, Routine routineToRun) {
-        routineToRun.getTasks().forEach(
-                task -> mainLayout.getChildren().addAll(
-                        Screen.getLabel(task.toString()),
-                        singleTimer(task))
-        );
+    private static Button getExitAndLogButton(String text, LogEntry log) {
+        Button exitButton = Screen.getAButton(text == null ? "Exit" : text);
+        exitButton.setOnAction(e -> {
+            log.setEndDateTime(LocalDateTime.now());
+            Database.getDb().insertLogEntry(log);
+            Screen.goToScreen(Screen.Pages.MAIN);
+        });
+        return exitButton;
     }
 
     private static VBox singleTimer(Task task) {
         VBox runLayout = new VBox();
         runLayout.setAlignment(Pos.CENTER);
 
+        Label nameOfTask = new Label();
+        nameOfTask.setText(task.getName());
+        nameOfTask.setTextFill(Color.GREEN);
+        nameOfTask.setStyle("-fx-font-size: 4em;");
+        nameOfTask.setWrapText(true);
+
         if (task instanceof TimedTask) {
             int time = ((TimedTask) task).getMinutes();
-            Duration duration = currentMode == TreatMinutesAs.MINUTES ?
-                    Duration.ofMinutes(time) :
-                    Duration.ofSeconds(time);
+
             Label timeRemainingText = new Label();
-            IntegerProperty timeSeconds = new SimpleIntegerProperty((int) duration.getSeconds());
+            IntegerProperty timeSeconds = new SimpleIntegerProperty(
+                    demoMode ?
+                            (int) Duration.ofSeconds(time).getSeconds() :
+                            (int) Duration.ofMinutes(time).getSeconds()
+            );
 
             // Bind the timeRemainingText text property to the timeSeconds property
             timeRemainingText.textProperty().bind(timeSeconds.asString());
-            timeRemainingText.setTextFill(Color.RED);
-            timeRemainingText.setStyle("-fx-font-size: 6em;");
+            timeRemainingText.setStyle("-fx-font-size: 8em;");
 
             Button startButton = new Button();
-            startButton.setText("Start task: " + task.getName());
+            startButton.setText("Start timer");
             startButton.setOnAction(event -> {
                 if (timeline != null) {
                     timeline.stop();
                 }
-                timeSeconds.set(time);
+                timeSeconds.set(demoMode ? time : time * 60);
                 timeline = new Timeline();
+                // Can't import both javafx.util.Duration and java.time.Duration,
+                // so here we need to specify javafx.util.Duration
                 timeline.getKeyFrames().add(
-                        new KeyFrame(javafx.util.Duration.seconds(duration.getSeconds() + 1),
+                        new KeyFrame(javafx.util.Duration.seconds(
+                                demoMode ?
+                                        (int) Duration.ofSeconds(time).getSeconds() + 1 :
+                                        (int) Duration.ofMinutes(time).getSeconds() + 1
+                        ),
                                 new KeyValue(timeSeconds, 0)));
                 timeline.playFromStart();
+                ((Button) event.getSource()).setText("Reset timer");
             });
+
             runLayout.getChildren().addAll(
+                    nameOfTask,
                     startButton,
                     timeRemainingText
             );
         } else {
-            runLayout.getChildren().add(
-                    Screen.getLabel("Task: " + task.getName() + " (untimed)")
+            runLayout.getChildren().addAll(
+                    nameOfTask,
+                    Screen.getLabel("Task untimed")
             );
         }
 
@@ -376,23 +415,26 @@ class Routine implements Serializable {
         return title;
     }
 
-    String getTitle() { return title; }
+    String getTitle() {
+        return title;
+    }
 
     int numberOfTasks() {
         return this.tasks.size();
     }
-    
+
     void addTask(Task task) {
         this.tasks.add(task);
     }
 
-    private ArrayList<Task> getTasks() { return tasks; }
+    private ArrayList<Task> getTasks() {
+        return tasks;
+    }
 
     @Override
     public String toString() {
         return this.getTitle();
     }
-
 
 
 }

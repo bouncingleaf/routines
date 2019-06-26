@@ -41,25 +41,4 @@ class RoutineTest {
         assertEquals(2, testRoutine.numberOfTasks());
     }
 
-//    /**
-//     * Tests the display of the routine title and the tasks
-//     */
-//    @Test
-//    void display() {
-//        addTwo();
-//        //Prepare to redirect output
-//        OutputStream os = new ByteArrayOutputStream();
-//        PrintStream ps = new PrintStream(os);
-//        System.setOut(ps);
-//
-//        testRoutine.display();
-//        assertEquals(
-//                TITLE + "\n" +
-//                        "\t1\t" + TIMED + "\t3 min\n" +
-//                        "\t2\t" + UNTIMED + "\t(untimed)\n",
-//                os.toString());
-//
-//        //Restore normal output
-//        System.setOut(System.out);
-//    }
 }

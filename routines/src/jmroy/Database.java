@@ -9,6 +9,7 @@ package jmroy;
 
 import java.sql.*;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Properties;
 
@@ -46,7 +47,15 @@ class Database {
                         "name varchar(50), " +
                         "theme_name varchar(20), " +
                         "primary key (user_id), " +
-                        "constraint fk_user_theme foreign key (theme_name) references Theme (theme_name)");
+                        "constraint fk_user_theme foreign key (theme_name) references Theme (theme_name)"),
+        // Round Three: Tables with only foreign keys from rounds one and two
+        LOG_ENTRY("LogEntry",
+                "log_id int not null generated always as identity, " +
+                        "log_user_id int, " +
+                        "start_date_time timestamp, " +
+                        "end_date_time timestamp, " +
+                        "routine_name varchar(50), " +
+                        "constraint fk_log_user foreign key (log_user_id) references UserTable (user_id)");
 
         private final String name;
         private final String definition;
@@ -59,6 +68,7 @@ class Database {
         String getTableName() {
             return name;
         }
+
         String getTableDefinition() {
             return definition;
         }
@@ -235,6 +245,7 @@ class Database {
 
     /**
      * If the user is new, inserts the user; otherwise, updates the user
+     *
      * @param user The User to insert or update
      */
     void upsertUser(User user) {
@@ -247,6 +258,7 @@ class Database {
 
     /**
      * Inserts the user into the database
+     *
      * @param user The User to insert
      */
     void insertUser(User user) {
@@ -273,6 +285,7 @@ class Database {
 
     /**
      * Updates a user in the database
+     *
      * @param user The User to update
      */
     void updateUser(User user) {
@@ -330,6 +343,7 @@ class Database {
 
     /**
      * Given the username, returns the user ID
+     *
      * @param usernameInput The username to search for
      * @return An integer, the user ID
      */
@@ -359,6 +373,7 @@ class Database {
 
     /**
      * Determines if a given username is in the database or not.
+     *
      * @param usernameInput The username to look for
      * @return True if the user is found, false if not
      */
@@ -388,6 +403,7 @@ class Database {
 
     /**
      * Gets information about a user from the database, given a username
+     *
      * @param usernameInput The username to get data for
      * @return The User data
      */
@@ -413,7 +429,7 @@ class Database {
                 String name = rs.getString(3);
                 String theme_name = rs.getString(4);
                 String theme_file = rs.getString(5);
-                user = new User(user_id, username, name, new Theme (theme_name, theme_file));
+                user = new User(user_id, username, name, new Theme(theme_name, theme_file));
                 System.out.println(user.getName());
             }
             commit("getUserByUsername");
@@ -430,6 +446,7 @@ class Database {
 
     /**
      * Inserts a theme into the database
+     *
      * @param theme The theme to insert
      */
     private void insertTheme(Theme theme) {
@@ -452,34 +469,9 @@ class Database {
         }
     }
 
-//    Theme getTheme(@SuppressWarnings("SameParameterValue") String name) {
-//        ResultSet rs;
-//        Theme themeFound = null;
-//        try {
-//            PreparedStatement psSearch = conn.prepareStatement(
-//                    "SELECT theme_name, theme_file FROM " + Table.THEME.getTableName() +
-//                            " WHERE theme_name=?"
-//            );
-//            statements.add(psSearch);
-//            psSearch.setString(1, name);
-//            rs = psSearch.executeQuery();
-//
-//            if (rs.next()) {
-//                themeFound = new Theme(
-//                        rs.getString(1),
-//                        rs.getString(2));
-//            }
-//
-//            commit("query theme: " + name);
-//        } catch (SQLException sqle) {
-//            printSQLException(sqle);
-//            cleanUp();
-//        }
-//        return themeFound;
-//    }
-
     /**
      * Gets all the available themes
+     *
      * @return an ArrayList of Themes
      */
     ArrayList<Theme> queryThemes() {
@@ -502,4 +494,120 @@ class Database {
         return themes;
     }
 
+
+    /*----------------------------------------------------------------------*
+     * Log Entry table methods
+     *----------------------------------------------------------------------*/
+
+    /**
+     * Inserts the logEntry into the database
+     *
+     * @param logEntry The LogEntry to insert
+     */
+    void insertLogEntry(LogEntry logEntry) {
+        PreparedStatement psInsert;
+
+        try {
+            // parameter 1 is log_user_id (int),
+            // parameter 2 is start_date_time (timestamp),
+            // parameter 3 is end_date_time (timestamp),
+            // parameter 4 is routine_name (varchar)
+            psInsert = conn.prepareStatement("insert into " +
+                    Table.LOG_ENTRY.getTableName() +
+                    " (log_user_id, start_date_time, end_date_time, routine_name) values (?, ?, ?, ?)");
+            statements.add(psInsert);
+            psInsert.setInt(1, logEntry.getUserID());
+            System.out.println("working with " + logEntry.getStartDateTime() + " and " + logEntry.getEndDateTime());
+            Timestamp start = Timestamp.valueOf(logEntry.getStartDateTime());
+            Timestamp end = Timestamp.valueOf(logEntry.getEndDateTime());
+            System.out.println("start is " + start + " and end is " + end);
+            psInsert.setTimestamp(2, start);
+            psInsert.setTimestamp(3, end);
+            psInsert.setString(4, logEntry.getRoutineName());
+            psInsert.executeUpdate();
+            commit("inserted logEntry");
+        } catch (SQLException sqle) {
+            printSQLException(sqle);
+            cleanUp();
+        }
+    }
+
+    ArrayList<LogEntry> queryLogEntriesForUser(User user) {
+        ArrayList<LogEntry> logEntries = new ArrayList<>();
+        PreparedStatement psQuery;
+        ResultSet rs;
+        try {
+            psQuery = conn.prepareStatement("SELECT log_id, " +
+                    "start_date_time, end_date_time, routine_name" +
+                    " FROM " + Table.LOG_ENTRY.getTableName() +
+                    " WHERE log_user_id=?");
+            statements.add(psQuery);
+            psQuery.setInt(1, user.getID());
+            rs = psQuery.executeQuery();
+            while (rs.next()) {
+                int log_id = rs.getInt(1);
+                LocalDateTime start_date_time = rs.getTimestamp(2).toLocalDateTime();
+                LocalDateTime end_date_time = rs.getTimestamp(3).toLocalDateTime();
+                String routine_name = rs.getString(4);
+                logEntries.add(new LogEntry(
+                        log_id,
+                        user,
+                        start_date_time,
+                        end_date_time,
+                        routine_name
+                ));
+            }
+            commit("queryLogEntries");
+        } catch (SQLException sqle) {
+            printSQLException(sqle);
+            cleanUp();
+        }
+        return logEntries;
+    }
+
+    LogEntry getLogEntryByID(int id) {
+        LogEntry logEntry = null;
+        PreparedStatement psQuery;
+        ResultSet rs;
+        try {
+            psQuery = conn.prepareStatement("SELECT log_id, " +
+                    "UserTable.user_id, UserTable.username, UserTable.name, Theme.theme_name, theme_file, " +
+                    "start_date_time, end_date_time, routine_name" +
+                    " FROM " + Table.LOG_ENTRY.getTableName() +
+                    " LEFT JOIN " + Table.USER.getTableName() +
+                    " ON " + Table.LOG_ENTRY.getTableName() + ".log_user_id = " +
+                    Table.USER.getTableName() + ".user_id" +
+                    " LEFT JOIN " + Table.THEME.getTableName() +
+                    " ON " + Table.USER.getTableName() + ".theme_name = " +
+                    Table.THEME.getTableName() + ".theme_name" +
+                    " WHERE log_id=?");
+            statements.add(psQuery);
+            psQuery.setInt(1, id);
+            rs = psQuery.executeQuery();
+            while (rs.next()) {
+                int log_id = rs.getInt(1);
+                int user_id = rs.getInt(2);
+                String username = rs.getString(3);
+                String name = rs.getString(4);
+                String theme_name = rs.getString(5);
+                String theme_file = rs.getString(6);
+                User user = new User(user_id, username, name, new Theme(theme_name, theme_file));
+                LocalDateTime start_date_time = rs.getTimestamp(7).toLocalDateTime();
+                LocalDateTime end_date_time = rs.getTimestamp(8).toLocalDateTime();
+                String routine_name = rs.getString(9);
+                logEntry = new LogEntry(
+                        log_id,
+                        user,
+                        start_date_time,
+                        end_date_time,
+                        routine_name
+                );
+            }
+            commit("queryLogByID");
+        } catch (SQLException sqle) {
+            printSQLException(sqle);
+            cleanUp();
+        }
+        return logEntry;
+    }
 }

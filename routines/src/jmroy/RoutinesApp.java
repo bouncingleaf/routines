@@ -5,6 +5,7 @@ import javafx.stage.Stage;
 
 /**
  * RoutinesApp - main entry point for the Routines application
+ *
  * @author Jessica Roy
  */
 public class RoutinesApp extends Application {
@@ -18,7 +19,7 @@ public class RoutinesApp extends Application {
         screen.show();
     }
 
-    public static void main (String[] args) {
+    public static void main(String[] args) {
         launch(args);
     }
 

@@ -47,3 +47,6 @@ Interacting with the application:
    You can choose Light or Dark and it will save automatically for the user.
    Sign out, sign back in - the theme should be retained.
    Light is the default theme.
+
+Food for thought:
+https://forge.medium.com/a-morning-routine-doesnt-matter-that-much-896a80cb394f

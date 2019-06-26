@@ -69,6 +69,11 @@ class User implements Serializable {
         return signedInUser;
     }
 
+    /**
+     * Create a new user with the given username
+     * @param userName The username to use
+     * @return The User object created
+     */
     static User createNewUser(String userName) {
         User newUser = new User(userName, "");
 
@@ -181,10 +186,6 @@ class User implements Serializable {
      */
     ArrayList<Report> getMyReports() {
         return myReports;
-    }
-
-    void setMyReports(ArrayList<Report> myReports) {
-        this.myReports = myReports;
     }
 
     void addReport(Report report) {
